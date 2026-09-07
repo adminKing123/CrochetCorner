@@ -44,6 +44,7 @@ export const adminRoutes = {
   categories: "/admin/categories",
   customOrders: "/admin/custom-orders",
   shopOrders: "/admin/shop-orders",
+  uploads: "/admin/uploads",
 };
 
 export const adminNavItems = [
@@ -76,6 +77,11 @@ export const adminNavItems = [
     label: "Custom Orders",
     href: adminRoutes.customOrders,
     icon: "IoCreateOutline",
+  },
+  {
+    label: "Upload Images",
+    href: adminRoutes.uploads,
+    icon: "IoCloudUploadOutline",
   },
   {
     label: "Shop Orders",
@@ -122,7 +128,6 @@ export const contactInfo = {
 export const profileMenuItems = [
   { label: "My Orders", href: authRoutes.myOrders },
   { label: "My Custom Orders", href: authRoutes.myCustomOrders },
-  { label: "New Custom Order", href: authRoutes.customOrders },
   { label: "Log out", action: "logout" },
 ];
 
