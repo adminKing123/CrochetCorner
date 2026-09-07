@@ -25,6 +25,11 @@ export const authRoutes = {
 export const adminRoutes = {
   root: "/admin",
   heroCarousel: "/admin/hero-carousel",
+  products: "/admin/products",
+  productNew: "/admin/products/new",
+  productEdit: (id) => `/admin/products/${id}/edit`,
+  keys: "/admin/keys",
+  categories: "/admin/categories",
 };
 
 export const adminNavItems = [
@@ -33,7 +38,39 @@ export const adminNavItems = [
     href: adminRoutes.heroCarousel,
     icon: "IoImagesOutline",
   },
+  {
+    label: "Products",
+    href: adminRoutes.products,
+    icon: "IoBagOutline",
+  },
+  {
+    label: "Keys",
+    href: adminRoutes.keys,
+    icon: "IoKeyOutline",
+  },
+  {
+    label: "Categories",
+    href: adminRoutes.categories,
+    icon: "IoFolderOutline",
+  },
 ];
+
+export const taxonomyAdminConfig = {
+  keys: {
+    type: "keys",
+    title: "Keys",
+    singular: "Key",
+    description: "Manage product keys used for tagging and filtering.",
+    route: adminRoutes.keys,
+  },
+  categories: {
+    type: "categories",
+    title: "Categories",
+    singular: "Category",
+    description: "Manage product categories for organization and browsing.",
+    route: adminRoutes.categories,
+  },
+};
 
 export const navLinks = [
   { label: "Shop", href: "#" },

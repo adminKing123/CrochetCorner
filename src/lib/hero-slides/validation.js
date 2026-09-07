@@ -1,9 +1,9 @@
-import crypto from "crypto";
 import { MAX_HERO_SLIDES } from "@/lib/hero-slides/defaults";
+import { generateId } from "@/lib/generate-id";
 
 export function createEmptyHeroSlide(index = 0) {
   return {
-    id: crypto.randomUUID(),
+    id: generateId(),
     src: "",
     srcMobile: "",
     alt: `Hero slide ${index + 1}`,
@@ -13,7 +13,7 @@ export function createEmptyHeroSlide(index = 0) {
 
 export function normalizeHeroSlide(slide, index = 0) {
   return {
-    id: slide.id || crypto.randomUUID(),
+    id: slide.id || generateId(),
     src: slide.src?.trim() || "",
     srcMobile: slide.srcMobile?.trim() || "",
     alt: slide.alt?.trim() || `Hero slide ${index + 1}`,
