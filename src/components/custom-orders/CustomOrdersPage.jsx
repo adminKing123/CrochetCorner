@@ -7,7 +7,7 @@ import { authRoutes } from "@/config/site";
 
 export default function CustomOrdersPage() {
   return (
-    <AuthGuard>
+    <AuthGuard redirectTo={authRoutes.customOrders}>
       <div className="landing-hero min-h-screen px-6 py-10 md:py-14">
         <div className="mx-auto max-w-4xl">
           <div className="mb-8 text-center">

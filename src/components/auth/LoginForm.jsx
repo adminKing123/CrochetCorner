@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { authRoutes, authCopy } from "@/config/site";
 import { auth } from "@/lib/firebase/client";
 import { checkEmailVerified, sendOtp } from "@/lib/auth/client-api";
 import { getFirebaseErrorMessage } from "@/lib/auth/errors";
+import { buildAuthRedirectUrl, getRedirectFromSearchParams } from "@/lib/auth/redirect";
 import AuthDivider from "@/components/auth/AuthDivider";
 import AuthFormHeader from "@/components/auth/AuthFormHeader";
 import AuthSplitLayout from "@/components/auth/AuthSplitLayout";
@@ -18,9 +19,12 @@ import {
   AuthLink,
 } from "@/components/auth/ui";
 
-export default function LoginForm() {
+function LoginFormContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const copy = authCopy.login;
+  const redirectTo = getRedirectFromSearchParams(searchParams) || authRoutes.home;
+  const signupHref = buildAuthRedirectUrl(authRoutes.signup, redirectTo);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -51,7 +55,7 @@ export default function LoginForm() {
         return;
       }
 
-      router.push(authRoutes.home);
+      router.push(redirectTo);
     } catch (err) {
       setError(getFirebaseErrorMessage(err.code));
     } finally {
@@ -64,7 +68,7 @@ export default function LoginForm() {
       footer={
         <>
           {copy.footerText}{" "}
-          <AuthLink href={authRoutes.signup}>{copy.footerLink}</AuthLink>
+          <AuthLink href={signupHref}>{copy.footerLink}</AuthLink>
         </>
       }
     >
@@ -73,7 +77,11 @@ export default function LoginForm() {
       <div className="space-y-5">
         <AuthError message={error} />
 
-        <GoogleSignInButton onError={setError} disabled={loading} />
+        <GoogleSignInButton
+          onError={setError}
+          disabled={loading}
+          redirectTo={redirectTo}
+        />
 
         <AuthDivider />
 
@@ -110,5 +118,19 @@ export default function LoginForm() {
         </form>
       </div>
     </AuthSplitLayout>
+  );
+}
+
+export default function LoginForm() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-cream">
+          <p className="font-body text-charcoal/70">Loading...</p>
+        </div>
+      }
+    >
+      <LoginFormContent />
+    </Suspense>
   );
 }

@@ -2,14 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  IoAlbumsOutline,
-  IoBagOutline,
-  IoCreateOutline,
-  IoFolderOutline,
-  IoImagesOutline,
-  IoKeyOutline,
-} from "react-icons/io5";
+import { IoAlbumsOutline, IoBagOutline, IoCreateOutline, IoFolderOutline, IoImagesOutline, IoKeyOutline, IoReceiptOutline } from "react-icons/io5";
 import { adminNavItems, authRoutes, siteConfig } from "@/config/site";
 
 const adminIcons = {
@@ -19,6 +12,7 @@ const adminIcons = {
   IoKeyOutline,
   IoFolderOutline,
   IoCreateOutline,
+  IoReceiptOutline,
 };
 
 export default function AdminSidebar() {

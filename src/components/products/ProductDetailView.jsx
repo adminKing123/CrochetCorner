@@ -1,6 +1,7 @@
 import { IoStar } from "react-icons/io5";
 import ProductImage from "@/components/products/ProductImage";
 import ProductPrice from "@/components/products/ProductPrice";
+import AddToCartButton from "@/components/cart/AddToCartButton";
 
 export default function ProductDetailView({ product }) {
   return (
@@ -40,6 +41,8 @@ export default function ProductDetailView({ product }) {
           sellingPrice={product.sellingPrice}
           size="lg"
         />
+
+        <AddToCartButton productId={product.id} className="w-fit" />
 
         <p className="font-body text-sm leading-relaxed text-charcoal/70 md:text-base">
           A handmade crochet piece from Crochet Corner — soft textures, thoughtful

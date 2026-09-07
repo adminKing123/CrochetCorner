@@ -26,6 +26,9 @@ export const authRoutes = {
   customOrders: "/custom-orders",
   myCustomOrders: "/custom-orders/requests",
   about: "/about",
+  cart: "/cart",
+  checkout: "/checkout",
+  myOrders: "/orders",
 };
 
 export const adminRoutes = {
@@ -40,6 +43,7 @@ export const adminRoutes = {
   keys: "/admin/keys",
   categories: "/admin/categories",
   customOrders: "/admin/custom-orders",
+  shopOrders: "/admin/shop-orders",
 };
 
 export const adminNavItems = [
@@ -72,6 +76,11 @@ export const adminNavItems = [
     label: "Custom Orders",
     href: adminRoutes.customOrders,
     icon: "IoCreateOutline",
+  },
+  {
+    label: "Shop Orders",
+    href: adminRoutes.shopOrders,
+    icon: "IoReceiptOutline",
   },
 ];
 
@@ -111,6 +120,7 @@ export const contactInfo = {
 };
 
 export const profileMenuItems = [
+  { label: "My Orders", href: authRoutes.myOrders },
   { label: "My Custom Orders", href: authRoutes.myCustomOrders },
   { label: "New Custom Order", href: authRoutes.customOrders },
   { label: "Log out", action: "logout" },

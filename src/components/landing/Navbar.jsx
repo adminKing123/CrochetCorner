@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { authRoutes, navLinks, siteConfig } from "@/config/site";
+import CartIconButton from "@/components/cart/CartIconButton";
 import NavbarAuth from "@/components/landing/NavbarAuth";
 
 export default function Navbar() {
@@ -33,7 +34,10 @@ export default function Navbar() {
           ))}
         </nav>
 
-        <NavbarAuth />
+        <div className="flex items-center gap-2">
+          <CartIconButton />
+          <NavbarAuth />
+        </div>
       </div>
     </header>
   );

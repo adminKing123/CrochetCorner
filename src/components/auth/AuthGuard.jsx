@@ -1,21 +1,23 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { authRoutes } from "@/config/site";
+import { buildAuthRedirectUrl } from "@/lib/auth/redirect";
 import { useAuthUser } from "@/hooks/useAuthUser";
 
-export default function AuthGuard({ children }) {
+export default function AuthGuard({ children, redirectTo }) {
   const router = useRouter();
+  const pathname = usePathname();
   const { user, loading } = useAuthUser();
 
   useEffect(() => {
     if (loading) return;
 
     if (!user) {
-      router.replace(authRoutes.login);
+      router.replace(buildAuthRedirectUrl(authRoutes.login, redirectTo || pathname));
     }
-  }, [loading, router, user]);
+  }, [loading, pathname, redirectTo, router, user]);
 
   if (loading) {
     return (

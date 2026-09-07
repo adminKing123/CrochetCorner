@@ -2,6 +2,8 @@ import nodemailer from "nodemailer";
 import { getAdminEmail } from "@/lib/auth/admin";
 import { getContactEmail } from "@/lib/site/contact";
 import { CUSTOM_ORDER_STATUS_LABELS } from "@/lib/custom-orders/defaults";
+import { SHOP_ORDER_STATUS_LABELS } from "@/lib/shop-orders/defaults";
+import { formatCurrency } from "@/lib/products/format";
 
 function getTransporter() {
   return nodemailer.createTransport({
@@ -128,6 +130,102 @@ export async function sendCustomOrderConfirmationEmail(order) {
         <p style="color: #666; font-size: 14px;">We have received your details and will get back to you soon.</p>
         <p style="color: #666; font-size: 14px; font-weight: bold; margin-top: 16px;">Your request</p>
         <p style="color: #444; font-size: 14px; line-height: 1.6; white-space: pre-wrap;">${order.details}</p>
+      </div>
+    `,
+  });
+}
+
+function formatShopOrderItemsText(order) {
+  return order.items
+    .map(
+      (item) =>
+        `- ${item.title} (${item.productId}) x${item.quantity} = ${formatCurrency(item.lineTotal)}`
+    )
+    .join("\n");
+}
+
+function formatShopOrderItemsHtml(order) {
+  return order.items
+    .map(
+      (item) =>
+        `<tr><td style="padding: 6px 0;">${item.title}</td><td style="padding: 6px 0;">${item.productId}</td><td style="padding: 6px 0;">${item.quantity}</td><td style="padding: 6px 0;">${formatCurrency(item.lineTotal)}</td></tr>`
+    )
+    .join("");
+}
+
+export async function sendShopOrderAdminEmail(order) {
+  const to = getCustomOrderAdminRecipient();
+  if (!to) {
+    throw new Error("No admin email configured for shop order notifications.");
+  }
+
+  const transporter = getTransporter();
+  const statusLabel = SHOP_ORDER_STATUS_LABELS[order.status] || order.status;
+
+  await transporter.sendMail({
+    from: `"Crochet Corner" <${process.env.SMTP_USER}>`,
+    to,
+    replyTo: order.userEmail,
+    subject: `New shop order from ${order.userEmail}`,
+    text: [
+      "New shop order — Crochet Corner",
+      "",
+      `Customer: ${order.userName || "Not provided"}`,
+      `Email: ${order.userEmail}`,
+      `Mobile: ${order.mobile || "Not provided"}`,
+      `Delivery notes: ${order.deliveryNotes || "Not provided"}`,
+      `Status: ${statusLabel}`,
+      `Subtotal: ${formatCurrency(order.subtotal)}`,
+      "",
+      "Items:",
+      formatShopOrderItemsText(order),
+      "",
+      "Payment and delivery charges will be confirmed by contacting the customer.",
+    ].join("\n"),
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 640px; margin: 0 auto; padding: 24px; background: #fff8f0; border-radius: 16px;">
+        <h2 style="color: #e8876f; margin-bottom: 8px;">Crochet Corner</h2>
+        <p style="color: #444; font-size: 16px; font-weight: bold;">New shop order</p>
+        <table style="width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; color: #444;">
+          <tr><td style="padding: 6px 0; font-weight: bold;">Customer</td><td style="padding: 6px 0;">${order.userName || "Not provided"}</td></tr>
+          <tr><td style="padding: 6px 0; font-weight: bold;">Email</td><td style="padding: 6px 0;">${order.userEmail}</td></tr>
+          <tr><td style="padding: 6px 0; font-weight: bold;">Mobile</td><td style="padding: 6px 0;">${order.mobile || "Not provided"}</td></tr>
+          <tr><td style="padding: 6px 0; font-weight: bold;">Delivery notes</td><td style="padding: 6px 0;">${order.deliveryNotes || "Not provided"}</td></tr>
+          <tr><td style="padding: 6px 0; font-weight: bold;">Subtotal</td><td style="padding: 6px 0;">${formatCurrency(order.subtotal)}</td></tr>
+        </table>
+        <table style="width: 100%; border-collapse: collapse; font-size: 14px; color: #444;">
+          <thead><tr><th align="left">Product</th><th align="left">ID</th><th align="left">Qty</th><th align="left">Total</th></tr></thead>
+          <tbody>${formatShopOrderItemsHtml(order)}</tbody>
+        </table>
+      </div>
+    `,
+  });
+}
+
+export async function sendShopOrderConfirmationEmail(order) {
+  const transporter = getTransporter();
+
+  await transporter.sendMail({
+    from: `"Crochet Corner" <${process.env.SMTP_USER}>`,
+    to: order.userEmail,
+    subject: "Crochet Corner — Order placed successfully",
+    text: [
+      "Thank you for your order.",
+      "",
+      "We have received your order and will contact you soon to confirm payment and delivery details.",
+      "",
+      `Subtotal: ${formatCurrency(order.subtotal)}`,
+      "",
+      "Items:",
+      formatShopOrderItemsText(order),
+    ].join("\n"),
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px; background: #fff8f0; border-radius: 16px;">
+        <h2 style="color: #e8876f; margin-bottom: 8px;">Crochet Corner</h2>
+        <p style="color: #444; font-size: 16px;">Thank you for your order.</p>
+        <p style="color: #666; font-size: 14px;">We will contact you soon to confirm payment and delivery details.</p>
+        <p style="color: #444; font-size: 14px; font-weight: bold; margin-top: 16px;">Subtotal: ${formatCurrency(order.subtotal)}</p>
+        <pre style="color: #444; font-size: 13px; line-height: 1.6; white-space: pre-wrap;">${formatShopOrderItemsText(order)}</pre>
       </div>
     `,
   });

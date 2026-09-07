@@ -2,12 +2,15 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { onAuthStateChanged } from "firebase/auth";
 import { authRoutes } from "@/config/site";
 import { auth } from "@/lib/firebase/client";
+import { buildAuthRedirectUrl } from "@/lib/auth/redirect";
 import ProfileDropdown from "@/components/landing/ProfileDropdown";
 
 export default function NavbarAuth() {
+  const pathname = usePathname();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -30,7 +33,7 @@ export default function NavbarAuth() {
 
   return (
     <Link
-      href={authRoutes.login}
+      href={buildAuthRedirectUrl(authRoutes.login, pathname)}
       className="font-body text-sm font-semibold text-charcoal/80 transition-colors hover:text-mint"
     >
       Sign in

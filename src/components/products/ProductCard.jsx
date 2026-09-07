@@ -4,6 +4,7 @@ import { IoStar } from "react-icons/io5";
 import ProductImage from "@/components/products/ProductImage";
 import ProductPrice from "@/components/products/ProductPrice";
 import ProductQuickViewButton from "@/components/products/ProductQuickViewButton";
+import AddToCartButton from "@/components/cart/AddToCartButton";
 
 export default function ProductCard({
   product,
@@ -45,8 +46,8 @@ export default function ProductCard({
         <ProductPrice
           originalPrice={product.originalPrice}
           sellingPrice={product.sellingPrice}
-          className="mt-auto"
         />
+        <AddToCartButton productId={product.id} className="mt-2 w-full" />
       </div>
     </article>
   );

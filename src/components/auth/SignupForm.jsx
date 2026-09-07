@@ -1,13 +1,14 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { authRoutes, authCopy } from "@/config/site";
 import { auth } from "@/lib/firebase/client";
 import { sendOtp } from "@/lib/auth/client-api";
 import { getFirebaseErrorMessage } from "@/lib/auth/errors";
 import { validatePassword } from "@/lib/auth/validation";
+import { buildAuthRedirectUrl, getRedirectFromSearchParams } from "@/lib/auth/redirect";
 import AuthDivider from "@/components/auth/AuthDivider";
 import AuthFormHeader from "@/components/auth/AuthFormHeader";
 import AuthSplitLayout from "@/components/auth/AuthSplitLayout";
@@ -19,9 +20,12 @@ import {
   AuthLink,
 } from "@/components/auth/ui";
 
-export default function SignupForm() {
+function SignupFormContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const copy = authCopy.signup;
+  const redirectTo = getRedirectFromSearchParams(searchParams) || authRoutes.home;
+  const loginHref = buildAuthRedirectUrl(authRoutes.login, redirectTo);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -60,7 +64,7 @@ export default function SignupForm() {
       footer={
         <>
           {copy.footerText}{" "}
-          <AuthLink href={authRoutes.login}>{copy.footerLink}</AuthLink>
+          <AuthLink href={loginHref}>{copy.footerLink}</AuthLink>
         </>
       }
     >
@@ -69,7 +73,11 @@ export default function SignupForm() {
       <div className="space-y-5">
         <AuthError message={error} />
 
-        <GoogleSignInButton onError={setError} disabled={loading} />
+        <GoogleSignInButton
+          onError={setError}
+          disabled={loading}
+          redirectTo={redirectTo}
+        />
 
         <AuthDivider />
 
@@ -113,5 +121,19 @@ export default function SignupForm() {
         </form>
       </div>
     </AuthSplitLayout>
+  );
+}
+
+export default function SignupForm() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-cream">
+          <p className="font-body text-charcoal/70">Loading...</p>
+        </div>
+      }
+    >
+      <SignupFormContent />
+    </Suspense>
   );
 }
