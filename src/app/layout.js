@@ -1,7 +1,8 @@
 import "./globals.css";
 
 export const metadata = {
-  title: "Hello World",
+  title: "Crochet Corner",
+  description: "Sign in to Crochet Corner",
 };
 
 export default function RootLayout({ children }) {
