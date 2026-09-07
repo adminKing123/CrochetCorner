@@ -86,6 +86,16 @@ export async function deleteProduct(email, id) {
   return parseResponse(response);
 }
 
+export async function searchProductsForPickerPublic(search) {
+  const data = await fetchProducts({ search, limit: 25, page: 1 });
+  return {
+    items: (data.products || []).map((product) => ({
+      ...product,
+      name: product.title,
+    })),
+  };
+}
+
 export async function fetchProductsAdmin(email, params = {}) {
   const response = await fetch(`/api/admin/products${buildQuery(params)}`, {
     cache: "no-store",

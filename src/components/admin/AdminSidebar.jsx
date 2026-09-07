@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   IoAlbumsOutline,
   IoBagOutline,
+  IoCreateOutline,
   IoFolderOutline,
   IoImagesOutline,
   IoKeyOutline,
@@ -17,6 +18,7 @@ const adminIcons = {
   IoAlbumsOutline,
   IoKeyOutline,
   IoFolderOutline,
+  IoCreateOutline,
 };
 
 export default function AdminSidebar() {

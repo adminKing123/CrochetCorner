@@ -23,6 +23,8 @@ export const authRoutes = {
   forgotPassword: "/forgot-password",
   resetPassword: "/reset-password",
   admin: "/admin",
+  customOrders: "/custom-orders",
+  myCustomOrders: "/custom-orders/requests",
 };
 
 export const adminRoutes = {
@@ -36,6 +38,7 @@ export const adminRoutes = {
   collectionEdit: (id) => `/admin/collections/${id}/edit`,
   keys: "/admin/keys",
   categories: "/admin/categories",
+  customOrders: "/admin/custom-orders",
 };
 
 export const adminNavItems = [
@@ -64,6 +67,11 @@ export const adminNavItems = [
     href: adminRoutes.categories,
     icon: "IoFolderOutline",
   },
+  {
+    label: "Custom Orders",
+    href: adminRoutes.customOrders,
+    icon: "IoCreateOutline",
+  },
 ];
 
 export const taxonomyAdminConfig = {
@@ -86,7 +94,7 @@ export const taxonomyAdminConfig = {
 export const navLinks = [
   { label: "Shop", href: authRoutes.shop },
   { label: "Collections", href: authRoutes.collections },
-  { label: "Custom Orders", href: "#" },
+  { label: "Custom Orders", href: authRoutes.customOrders },
   { label: "Our Story", href: "#" },
 ];
 
@@ -94,7 +102,7 @@ export const footerLinks = [
   { label: "About Us", href: "#" },
   { label: "Shop", href: authRoutes.shop },
   { label: "Collections", href: authRoutes.collections },
-  { label: "Custom Orders", href: "#" },
+  { label: "Custom Orders", href: authRoutes.customOrders },
 ];
 
 export const contactInfo = {
@@ -102,9 +110,8 @@ export const contactInfo = {
 };
 
 export const profileMenuItems = [
-  { label: "My Profile", href: "#" },
-  { label: "My Orders", href: "#" },
-  { label: "Settings", href: "#" },
+  { label: "My Custom Orders", href: authRoutes.myCustomOrders },
+  { label: "New Custom Order", href: authRoutes.customOrders },
   { label: "Log out", action: "logout" },
 ];
 

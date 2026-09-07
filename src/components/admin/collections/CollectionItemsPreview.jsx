@@ -29,14 +29,16 @@ export default function CollectionItemsPreview({ products, onRemove }) {
                 className="absolute inset-0 h-full w-full object-cover"
               />
             ) : null}
-            <button
-              type="button"
-              onClick={() => onRemove(product.id)}
-              className="absolute right-2 top-2 rounded-full bg-white/95 p-1.5 text-charcoal shadow-sm transition hover:bg-red-50 hover:text-red-600"
-              aria-label={`Remove ${product.title}`}
-            >
-              <IoClose className="h-4 w-4" />
-            </button>
+            {onRemove ? (
+              <button
+                type="button"
+                onClick={() => onRemove(product.id)}
+                className="absolute right-2 top-2 rounded-full bg-white/95 p-1.5 text-charcoal shadow-sm transition hover:bg-red-50 hover:text-red-600"
+                aria-label={`Remove ${product.title}`}
+              >
+                <IoClose className="h-4 w-4" />
+              </button>
+            ) : null}
           </div>
           <div className="p-3">
             <h4 className="line-clamp-2 font-body text-sm font-semibold text-charcoal">
