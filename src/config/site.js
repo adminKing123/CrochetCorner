@@ -21,6 +21,30 @@ export const authRoutes = {
   resetPassword: "/reset-password",
 };
 
+export const navLinks = [
+  { label: "Shop", href: "#" },
+  { label: "Collections", href: "#" },
+  { label: "Custom Orders", href: "#" },
+  { label: "Our Story", href: "#" },
+];
+
+export const profileMenuItems = [
+  { label: "My Profile", href: "#" },
+  { label: "My Orders", href: "#" },
+  { label: "Settings", href: "#" },
+  { label: "Log out", action: "logout" },
+];
+
+export const landingCopy = {
+  hero: {
+    title: "Your cozy corner for crochet",
+    subtitle:
+      "Discover patterns, share your projects, and connect with fellow crocheters — one loop at a time.",
+    primaryCta: "Get started free",
+    secondaryCta: "Sign in",
+  },
+};
+
 export const otpTypes = {
   emailVerification: "email_verification",
   passwordReset: "password_reset",
