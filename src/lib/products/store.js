@@ -40,16 +40,37 @@ export function getProductsQuery({
   bestSeller = "",
   category = "",
   keys = "",
+  ids = "",
 } = {}) {
   let products = readAllProducts();
+
+  const idList = parseIdList(ids);
+
+  if (idList.length) {
+    const idSet = new Set(idList);
+    products = products.filter((product) => idSet.has(product.id));
+
+    return {
+      products: products.slice(0, limit),
+      pagination: {
+        page: 1,
+        limit,
+        total: products.length,
+        totalPages: 1,
+      },
+    };
+  }
 
   const query = search.trim().toLowerCase();
   const categoryIds = parseIdList(category);
   const keyIds = parseIdList(keys);
 
   if (query) {
-    products = products.filter((product) =>
-      product.title.toLowerCase().includes(query)
+    const normalizedQuery = query.toLowerCase();
+    products = products.filter(
+      (product) =>
+        product.title.toLowerCase().includes(normalizedQuery) ||
+        product.id.toLowerCase().includes(normalizedQuery)
     );
   }
 

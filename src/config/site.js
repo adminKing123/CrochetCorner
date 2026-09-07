@@ -29,6 +29,9 @@ export const adminRoutes = {
   products: "/admin/products",
   productNew: "/admin/products/new",
   productEdit: (id) => `/admin/products/${id}/edit`,
+  collections: "/admin/collections",
+  collectionNew: "/admin/collections/new",
+  collectionEdit: (id) => `/admin/collections/${id}/edit`,
   keys: "/admin/keys",
   categories: "/admin/categories",
 };
@@ -43,6 +46,11 @@ export const adminNavItems = [
     label: "Products",
     href: adminRoutes.products,
     icon: "IoBagOutline",
+  },
+  {
+    label: "Collections",
+    href: adminRoutes.collections,
+    icon: "IoAlbumsOutline",
   },
   {
     label: "Keys",

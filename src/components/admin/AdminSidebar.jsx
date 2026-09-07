@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  IoAlbumsOutline,
   IoBagOutline,
   IoFolderOutline,
   IoImagesOutline,
@@ -13,6 +14,7 @@ import { adminNavItems, authRoutes, siteConfig } from "@/config/site";
 const adminIcons = {
   IoImagesOutline,
   IoBagOutline,
+  IoAlbumsOutline,
   IoKeyOutline,
   IoFolderOutline,
 };

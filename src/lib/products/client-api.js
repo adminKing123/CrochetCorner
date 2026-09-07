@@ -66,3 +66,39 @@ export async function deleteProduct(email, id) {
   });
   return parseResponse(response);
 }
+
+export async function fetchProductsAdmin(email, params = {}) {
+  const response = await fetch(`/api/admin/products${buildQuery(params)}`, {
+    cache: "no-store",
+    headers: { "x-admin-email": email },
+  });
+  return parseResponse(response);
+}
+
+export async function searchProductsForPicker(email, search) {
+  const data = await fetchProductsAdmin(email, { search, limit: 25, page: 1 });
+  return {
+    items: (data.products || []).map((product) => ({
+      ...product,
+      name: product.title,
+    })),
+  };
+}
+
+export async function fetchProductsByIds(email, ids = []) {
+  if (!ids.length) {
+    return { items: [] };
+  }
+
+  const data = await fetchProductsAdmin(email, {
+    ids: ids.join(","),
+    limit: ids.length,
+  });
+
+  return {
+    items: (data.products || []).map((product) => ({
+      ...product,
+      name: product.title,
+    })),
+  };
+}

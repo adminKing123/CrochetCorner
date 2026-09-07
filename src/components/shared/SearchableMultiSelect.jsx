@@ -11,6 +11,7 @@ export default function SearchableMultiSelect({
   onSearch,
   emptyMessage = "No results found.",
   menuClassName = "",
+  getOptionDescription,
 }) {
   const [query, setQuery] = useState("");
   const [options, setOptions] = useState([]);
@@ -127,7 +128,14 @@ export default function SearchableMultiSelect({
                   >
                     {checked ? "✓" : ""}
                   </span>
-                  {item.name}
+                  <span className="min-w-0">
+                    <span className="block truncate">{item.name}</span>
+                    {getOptionDescription ? (
+                      <span className="block truncate text-xs text-charcoal/50">
+                        {getOptionDescription(item)}
+                      </span>
+                    ) : null}
+                  </span>
                 </button>
               );
             })
