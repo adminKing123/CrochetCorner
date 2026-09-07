@@ -22,7 +22,7 @@ export async function POST(request) {
       return jsonError(passwordError, 400);
     }
 
-    const tokenResult = consumeResetToken(resetToken);
+    const tokenResult = await consumeResetToken(resetToken);
 
     if (!tokenResult.success) {
       return jsonError(tokenResult.error, 400);

@@ -10,7 +10,7 @@ export async function GET(request) {
   }
 
   try {
-    const slides = getHeroSlides();
+    const slides = await getHeroSlides();
     return jsonSuccess({ slides });
   } catch (error) {
     console.error("admin hero-slides GET error:", error);
@@ -30,7 +30,7 @@ export async function PUT(request) {
       return jsonError("Unauthorized.", 403);
     }
 
-    const result = saveHeroSlides(body.slides);
+    const result = await saveHeroSlides(body.slides);
 
     if (!result.success) {
       return jsonError(result.error, 400);

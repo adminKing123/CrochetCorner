@@ -4,7 +4,7 @@ import { getCollectionById } from "@/lib/collections/store";
 export async function GET(_request, { params }) {
   try {
     const { id } = await params;
-    const collection = getCollectionById(id);
+    const collection = await getCollectionById(id);
 
     if (!collection) {
       return jsonError("Collection not found.", 404);

@@ -1,49 +1,30 @@
-import fs from "fs";
-import path from "path";
 import { TAXONOMY_PAGE_SIZE, TAXONOMY_SEARCH_LIMIT } from "@/lib/taxonomy/defaults";
 import {
   normalizeTaxonomyItem,
   sanitizeTaxonomyItems,
   validateTaxonomyItem,
 } from "@/lib/taxonomy/validation";
+import {
+  FIRESTORE_COLLECTIONS,
+  getDocument,
+  listDocuments,
+  paginateItems,
+  setDocument,
+  deleteDocument,
+} from "@/lib/firebase/firestore";
 
-export function createTaxonomyStore(fileName) {
-  const STORE_PATH = path.join(process.cwd(), "data", fileName);
-
-  function ensureStoreDir() {
-    const dir = path.dirname(STORE_PATH);
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
-    }
+export function createTaxonomyStore(collectionName) {
+  async function readAll() {
+    return sanitizeTaxonomyItems(await listDocuments(collectionName));
   }
 
-  function readAll() {
-    try {
-      if (fs.existsSync(STORE_PATH)) {
-        const data = JSON.parse(fs.readFileSync(STORE_PATH, "utf8"));
-        if (Array.isArray(data.items)) {
-          return sanitizeTaxonomyItems(data.items);
-        }
-      }
-    } catch {
-      // Start empty.
-    }
-
-    return [];
-  }
-
-  function writeAll(items) {
-    ensureStoreDir();
-    fs.writeFileSync(STORE_PATH, JSON.stringify({ items }, null, 2));
-  }
-
-  function searchItems({
+  async function searchItems({
     search = "",
     limit = TAXONOMY_SEARCH_LIMIT,
     page = 1,
     ids = "",
   } = {}) {
-    let items = readAll();
+    let items = await readAll();
 
     if (ids) {
       const idSet = new Set(
@@ -69,87 +50,74 @@ export function createTaxonomyStore(fileName) {
       (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
     );
 
-    const total = items.length;
-    const totalPages = Math.max(1, Math.ceil(total / limit));
-    const safePage = Math.min(Math.max(page, 1), totalPages);
-    const start = (safePage - 1) * limit;
-
-    return {
-      items: items.slice(start, start + limit),
-      pagination: { page: safePage, limit, total, totalPages },
-    };
+    const { items: pagedItems, pagination } = paginateItems(items, page, limit);
+    return { items: pagedItems, pagination };
   }
 
   return {
     getAll: readAll,
     search: searchItems,
-    getById(id) {
-      return readAll().find((item) => item.id === id) || null;
+    async getById(id) {
+      const item = await getDocument(collectionName, id);
+      return item ? normalizeTaxonomyItem(item) : null;
     },
-    getByIds(ids = []) {
+    async getByIds(ids = []) {
       const idSet = new Set(ids);
-      return readAll().filter((item) => idSet.has(item.id));
+      const items = await readAll();
+      return items.filter((item) => idSet.has(item.id));
     },
-    create(input) {
+    async create(input) {
       const error = validateTaxonomyItem(input);
       if (error) return { success: false, error };
 
-      const items = readAll();
       const item = normalizeTaxonomyItem({
         ...input,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       });
 
-      items.unshift(item);
-      writeAll(items);
+      await setDocument(collectionName, item.id, item);
       return { success: true, item };
     },
-    update(id, input) {
-      const items = readAll();
-      const index = items.findIndex((item) => item.id === id);
+    async update(id, input) {
+      const existing = await getDocument(collectionName, id);
 
-      if (index === -1) {
+      if (!existing) {
         return { success: false, error: "Item not found." };
       }
 
-      const error = validateTaxonomyItem({ ...items[index], ...input, id });
+      const error = validateTaxonomyItem({ ...existing, ...input, id });
       if (error) return { success: false, error };
 
-      const item = normalizeTaxonomyItem(
-        {
-          ...items[index],
-          ...input,
-          id,
-          createdAt: items[index].createdAt,
-          updatedAt: new Date().toISOString(),
-        },
-        index
-      );
+      const item = normalizeTaxonomyItem({
+        ...existing,
+        ...input,
+        id,
+        createdAt: existing.createdAt,
+        updatedAt: new Date().toISOString(),
+      });
 
-      items[index] = item;
-      writeAll(items);
+      await setDocument(collectionName, item.id, item);
       return { success: true, item };
     },
-    delete(id) {
-      const items = readAll();
-      const nextItems = items.filter((item) => item.id !== id);
+    async delete(id) {
+      const existing = await getDocument(collectionName, id);
 
-      if (nextItems.length === items.length) {
+      if (!existing) {
         return { success: false, error: "Item not found." };
       }
 
-      writeAll(nextItems);
+      await deleteDocument(collectionName, id);
       return { success: true };
     },
-    listForAdmin({ page = 1, search = "", limit = TAXONOMY_PAGE_SIZE } = {}) {
+    async listForAdmin({ page = 1, search = "", limit = TAXONOMY_PAGE_SIZE } = {}) {
       return searchItems({ page, search, limit });
     },
   };
 }
 
-export const keysStore = createTaxonomyStore("keys.json");
-export const categoriesStore = createTaxonomyStore("categories.json");
+export const keysStore = createTaxonomyStore(FIRESTORE_COLLECTIONS.keys);
+export const categoriesStore = createTaxonomyStore(FIRESTORE_COLLECTIONS.categories);
 
 export const taxonomyStores = {
   keys: keysStore,

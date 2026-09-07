@@ -14,7 +14,7 @@ function parseQueryParams(request) {
 export async function GET(request, { params }) {
   try {
     const { id } = await params;
-    const result = getCollectionProductsQuery(id, parseQueryParams(request));
+    const result = await getCollectionProductsQuery(id, parseQueryParams(request));
 
     if (!result) {
       return jsonError("Collection not found.", 404);

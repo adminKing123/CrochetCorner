@@ -21,7 +21,7 @@ export async function GET(request) {
   }
 
   try {
-    const result = getUploadsQuery(parseQueryParams(request));
+    const result = await getUploadsQuery(parseQueryParams(request));
     return jsonSuccess(result);
   } catch (error) {
     console.error("admin uploads GET error:", error);

@@ -23,7 +23,7 @@ export async function GET(request) {
   }
 
   try {
-    const result = getProductsQuery(parseQueryParams(request));
+    const result = await getProductsQuery(parseQueryParams(request));
     return jsonSuccess(result);
   } catch (error) {
     console.error("admin products GET error:", error);
@@ -40,7 +40,7 @@ export async function POST(request) {
       return auth.response;
     }
 
-    const result = createProduct(body.product);
+    const result = await createProduct(body.product);
 
     if (!result.success) {
       return jsonError(result.error, 400);

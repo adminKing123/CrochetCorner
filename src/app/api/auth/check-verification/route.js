@@ -15,7 +15,7 @@ export async function POST(request) {
       return jsonError("Email is required.", 400);
     }
 
-    const verified = isEmailVerifiedLocally(normalizeEmail(email));
+    const verified = await isEmailVerifiedLocally(normalizeEmail(email));
 
     return jsonSuccess({ verified });
   } catch (error) {

@@ -22,7 +22,7 @@ export async function GET(request) {
   }
 
   try {
-    const result = getCustomOrdersQuery(parseQueryParams(request));
+    const result = await getCustomOrdersQuery(parseQueryParams(request));
     return jsonSuccess(result);
   } catch (error) {
     console.error("admin custom-orders GET error:", error);

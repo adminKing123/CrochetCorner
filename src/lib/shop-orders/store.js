@@ -1,12 +1,9 @@
-import fs from "fs";
-import path from "path";
 import { generateId } from "@/lib/generate-id";
 import { normalizeEmail } from "@/lib/api/response";
 import { getProductById } from "@/lib/products/store";
 import {
   SHOP_ORDERS_ADMIN_PAGE_SIZE,
   SHOP_ORDERS_PAGE_SIZE,
-  defaultShopOrders,
 } from "@/lib/shop-orders/defaults";
 import {
   normalizeShopOrder,
@@ -15,58 +12,25 @@ import {
   validateShopOrderCreate,
   validateShopOrderStatus,
 } from "@/lib/shop-orders/validation";
+import {
+  FIRESTORE_COLLECTIONS,
+  getDocument,
+  listDocuments,
+  paginateItems,
+  setDocument,
+} from "@/lib/firebase/firestore";
 
-const STORE_PATH = path.join(process.cwd(), "data", "shop-orders.json");
+const COLLECTION = FIRESTORE_COLLECTIONS.shopOrders;
 
-function ensureStoreDir() {
-  const dir = path.dirname(STORE_PATH);
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
+async function readAllShopOrders() {
+  return sanitizeShopOrders(await listDocuments(COLLECTION));
 }
 
-function readAllShopOrders() {
-  try {
-    if (fs.existsSync(STORE_PATH)) {
-      const data = JSON.parse(fs.readFileSync(STORE_PATH, "utf8"));
-      if (Array.isArray(data.orders)) {
-        return sanitizeShopOrders(data.orders);
-      }
-    }
-  } catch {
-    // Fall back to defaults.
-  }
-
-  return sanitizeShopOrders(defaultShopOrders);
-}
-
-function writeShopOrders(orders) {
-  ensureStoreDir();
-  fs.writeFileSync(STORE_PATH, JSON.stringify({ orders }, null, 2));
-}
-
-function paginate(items, page, limit) {
-  const total = items.length;
-  const totalPages = Math.max(1, Math.ceil(total / limit));
-  const safePage = Math.min(Math.max(page, 1), totalPages);
-  const start = (safePage - 1) * limit;
-
-  return {
-    items: items.slice(start, start + limit),
-    pagination: {
-      page: safePage,
-      limit,
-      total,
-      totalPages,
-    },
-  };
-}
-
-function resolveOrderItems(items = []) {
+async function resolveOrderItems(items = []) {
   const resolvedItems = [];
 
   for (const item of items) {
-    const product = getProductById(item.productId);
+    const product = await getProductById(item.productId);
     if (!product) {
       return { error: `Product "${item.productId}" is no longer available.` };
     }
@@ -91,13 +55,13 @@ function resolveOrderItems(items = []) {
   return { items: resolvedItems, subtotal };
 }
 
-export function createShopOrder(input = {}) {
+export async function createShopOrder(input = {}) {
   const error = validateShopOrderCreate(input);
   if (error) {
     return { success: false, error };
   }
 
-  const resolved = resolveOrderItems(input.items);
+  const resolved = await resolveOrderItems(input.items);
   if (resolved.error) {
     return { success: false, error: resolved.error };
   }
@@ -116,37 +80,36 @@ export function createShopOrder(input = {}) {
     updatedAt: now,
   });
 
-  const orders = readAllShopOrders();
-  orders.unshift(order);
-  writeShopOrders(orders);
+  await setDocument(COLLECTION, order.id, order);
 
   return { success: true, order };
 }
 
-export function getShopOrderById(id) {
-  return readAllShopOrders().find((order) => order.id === id) || null;
+export async function getShopOrderById(id) {
+  const order = await getDocument(COLLECTION, id);
+  return order ? normalizeShopOrder(order) : null;
 }
 
-export function getShopOrdersByUserEmail(
+export async function getShopOrdersByUserEmail(
   userEmail,
   { page = 1, limit = SHOP_ORDERS_PAGE_SIZE } = {}
 ) {
   const normalizedEmail = normalizeEmail(userEmail);
-  const orders = readAllShopOrders()
+  const orders = (await readAllShopOrders())
     .filter((order) => order.userEmail === normalizedEmail)
     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
-  const { items, pagination } = paginate(orders, page, limit);
+  const { items, pagination } = paginateItems(orders, page, limit);
   return { orders: items, pagination };
 }
 
-export function getShopOrdersQuery({
+export async function getShopOrdersQuery({
   page = 1,
   limit = SHOP_ORDERS_ADMIN_PAGE_SIZE,
   search = "",
   status = "",
 } = {}) {
-  let orders = readAllShopOrders();
+  let orders = await readAllShopOrders();
   const query = search.trim().toLowerCase();
 
   if (query) {
@@ -170,31 +133,29 @@ export function getShopOrdersQuery({
 
   orders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
-  const { items, pagination } = paginate(orders, page, limit);
+  const { items, pagination } = paginateItems(orders, page, limit);
   return { orders: items, pagination };
 }
 
-export function updateShopOrderStatus(id, status) {
+export async function updateShopOrderStatus(id, status) {
   const error = validateShopOrderStatus(status);
   if (error) {
     return { success: false, error };
   }
 
-  const orders = readAllShopOrders();
-  const index = orders.findIndex((order) => order.id === id);
+  const existing = await getShopOrderById(id);
 
-  if (index === -1) {
+  if (!existing) {
     return { success: false, error: "Shop order not found." };
   }
 
   const updatedOrder = normalizeShopOrder({
-    ...orders[index],
+    ...existing,
     status,
     updatedAt: new Date().toISOString(),
   });
 
-  orders[index] = updatedOrder;
-  writeShopOrders(orders);
+  await setDocument(COLLECTION, id, updatedOrder);
 
   return { success: true, order: updatedOrder };
 }

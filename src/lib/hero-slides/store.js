@@ -1,37 +1,30 @@
-import fs from "fs";
-import path from "path";
 import { defaultHeroSlides } from "@/lib/hero-slides/defaults";
 import { sanitizeHeroSlides, validateHeroSlides } from "@/lib/hero-slides/validation";
+import {
+  FIRESTORE_COLLECTIONS,
+  getDocument,
+  setDocument,
+} from "@/lib/firebase/firestore";
 
-const STORE_PATH = path.join(process.cwd(), "data", "hero-slides.json");
+const SETTINGS_DOC_ID = "heroSlides";
 
-function ensureStoreDir() {
-  const dir = path.dirname(STORE_PATH);
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
-}
+async function readHeroSlidesDoc() {
+  const doc = await getDocument(FIRESTORE_COLLECTIONS.settings, SETTINGS_DOC_ID);
 
-function readStoreFile() {
-  try {
-    if (fs.existsSync(STORE_PATH)) {
-      const data = JSON.parse(fs.readFileSync(STORE_PATH, "utf8"));
-      if (Array.isArray(data.slides) && data.slides.length > 0) {
-        return sanitizeHeroSlides(data.slides);
-      }
-    }
-  } catch {
-    // Fall back to defaults below.
+  if (doc?.slides?.length) {
+    return sanitizeHeroSlides(doc.slides);
   }
 
-  return sanitizeHeroSlides(defaultHeroSlides);
+  const slides = sanitizeHeroSlides(defaultHeroSlides);
+  await setDocument(FIRESTORE_COLLECTIONS.settings, SETTINGS_DOC_ID, { slides });
+  return slides;
 }
 
-export function getHeroSlides() {
-  return readStoreFile();
+export async function getHeroSlides() {
+  return readHeroSlidesDoc();
 }
 
-export function saveHeroSlides(slides) {
+export async function saveHeroSlides(slides) {
   const error = validateHeroSlides(slides);
 
   if (error) {
@@ -39,8 +32,7 @@ export function saveHeroSlides(slides) {
   }
 
   const sanitized = sanitizeHeroSlides(slides);
-  ensureStoreDir();
-  fs.writeFileSync(STORE_PATH, JSON.stringify({ slides: sanitized }, null, 2));
+  await setDocument(FIRESTORE_COLLECTIONS.settings, SETTINGS_DOC_ID, { slides: sanitized });
 
   return { success: true, slides: sanitized };
 }

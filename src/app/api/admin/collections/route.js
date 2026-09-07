@@ -22,7 +22,7 @@ export async function GET(request) {
   }
 
   try {
-    const result = getCollectionsQuery(parseQueryParams(request));
+    const result = await getCollectionsQuery(parseQueryParams(request));
     return jsonSuccess(result);
   } catch (error) {
     console.error("admin collections GET error:", error);
@@ -39,7 +39,7 @@ export async function POST(request) {
       return auth.response;
     }
 
-    const result = createCollection(body.collection);
+    const result = await createCollection(body.collection);
 
     if (!result.success) {
       return jsonError(result.error, 400);

@@ -12,7 +12,7 @@ export async function GET(_request, { params }) {
 
   try {
     const { id } = await params;
-    const product = getProductById(id);
+    const product = await getProductById(id);
 
     if (!product) {
       return jsonError("Product not found.", 404);
@@ -35,7 +35,7 @@ export async function PUT(request, { params }) {
     }
 
     const { id } = await params;
-    const result = updateProduct(id, body.product);
+    const result = await updateProduct(id, body.product);
 
     if (!result.success) {
       return jsonError(result.error, 400);
@@ -58,7 +58,7 @@ export async function DELETE(request, { params }) {
     }
 
     const { id } = await params;
-    const result = deleteProduct(id);
+    const result = await deleteProduct(id);
 
     if (!result.success) {
       return jsonError(result.error, 404);

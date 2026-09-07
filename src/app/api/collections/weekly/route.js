@@ -3,7 +3,7 @@ import { getWeeklyCollection } from "@/lib/collections/store";
 
 export async function GET() {
   try {
-    const collection = getWeeklyCollection();
+    const collection = await getWeeklyCollection();
     return jsonSuccess({ collection });
   } catch (error) {
     console.error("collections weekly GET error:", error);

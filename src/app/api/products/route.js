@@ -17,7 +17,7 @@ function parseQueryParams(request) {
 
 export async function GET(request) {
   try {
-    const result = getProductsQuery(parseQueryParams(request));
+    const result = await getProductsQuery(parseQueryParams(request));
     return jsonSuccess(result);
   } catch (error) {
     console.error("products GET error:", error);

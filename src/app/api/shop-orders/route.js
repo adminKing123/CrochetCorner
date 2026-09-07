@@ -24,7 +24,7 @@ export async function GET(request) {
   }
 
   try {
-    const result = getShopOrdersByUserEmail(auth.email, parseQueryParams(request));
+    const result = await getShopOrdersByUserEmail(auth.email, parseQueryParams(request));
     return jsonSuccess(result);
   } catch (error) {
     console.error("shop-orders GET error:", error);
@@ -41,7 +41,7 @@ export async function POST(request) {
       return auth.response;
     }
 
-    const result = createShopOrder({
+    const result = await createShopOrder({
       userEmail: auth.email,
       userName: body?.userName || "",
       mobile: body?.order?.mobile,

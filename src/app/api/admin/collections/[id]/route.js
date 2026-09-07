@@ -16,7 +16,7 @@ export async function GET(_request, { params }) {
 
   try {
     const { id } = await params;
-    const collection = getCollectionById(id);
+    const collection = await getCollectionById(id);
 
     if (!collection) {
       return jsonError("Collection not found.", 404);
@@ -39,7 +39,7 @@ export async function PUT(request, { params }) {
     }
 
     const { id } = await params;
-    const result = updateCollection(id, body.collection);
+    const result = await updateCollection(id, body.collection);
 
     if (!result.success) {
       return jsonError(result.error, 400);
@@ -62,7 +62,7 @@ export async function DELETE(request, { params }) {
     }
 
     const { id } = await params;
-    const result = deleteCollection(id);
+    const result = await deleteCollection(id);
 
     if (!result.success) {
       return jsonError(result.error, 404);

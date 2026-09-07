@@ -24,7 +24,7 @@ export async function GET(request) {
   }
 
   try {
-    const result = getCustomOrdersByUserEmail(auth.email, parseQueryParams(request));
+    const result = await getCustomOrdersByUserEmail(auth.email, parseQueryParams(request));
     return jsonSuccess(result);
   } catch (error) {
     console.error("custom-orders GET error:", error);
@@ -41,7 +41,7 @@ export async function POST(request) {
       return auth.response;
     }
 
-    const result = createCustomOrder({
+    const result = await createCustomOrder({
       userEmail: auth.email,
       userName: body?.userName || "",
       details: body?.order?.details,

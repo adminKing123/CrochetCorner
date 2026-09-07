@@ -3,7 +3,7 @@ import { getHeroSlides } from "@/lib/hero-slides/store";
 
 export async function GET() {
   try {
-    const slides = getHeroSlides();
+    const slides = await getHeroSlides();
     return jsonSuccess({ slides });
   } catch (error) {
     console.error("hero-slides GET error:", error);

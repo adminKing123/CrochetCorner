@@ -1,39 +1,31 @@
-import fs from "fs";
-import path from "path";
 import { PRODUCTS_PAGE_SIZE, defaultProducts } from "@/lib/products/defaults";
 import { parseIdList } from "@/lib/products/filters";
 import { normalizeProduct, sanitizeProducts, validateProduct } from "@/lib/products/validation";
+import {
+  FIRESTORE_COLLECTIONS,
+  getDocument,
+  listDocuments,
+  paginateItems,
+  seedDocuments,
+  setDocument,
+  deleteDocument,
+} from "@/lib/firebase/firestore";
 
-const STORE_PATH = path.join(process.cwd(), "data", "products.json");
+const COLLECTION = FIRESTORE_COLLECTIONS.products;
 
-function ensureStoreDir() {
-  const dir = path.dirname(STORE_PATH);
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
+async function readAllProducts() {
+  const products = sanitizeProducts(await listDocuments(COLLECTION));
+
+  if (!products.length) {
+    const seeded = sanitizeProducts(defaultProducts);
+    await seedDocuments(COLLECTION, seeded);
+    return seeded;
   }
+
+  return products;
 }
 
-function readAllProducts() {
-  try {
-    if (fs.existsSync(STORE_PATH)) {
-      const data = JSON.parse(fs.readFileSync(STORE_PATH, "utf8"));
-      if (Array.isArray(data.products)) {
-        return sanitizeProducts(data.products);
-      }
-    }
-  } catch {
-    // Fall back to defaults.
-  }
-
-  return sanitizeProducts(defaultProducts);
-}
-
-function writeProducts(products) {
-  ensureStoreDir();
-  fs.writeFileSync(STORE_PATH, JSON.stringify({ products }, null, 2));
-}
-
-export function getProductsQuery({
+export async function getProductsQuery({
   page = 1,
   limit = PRODUCTS_PAGE_SIZE,
   search = "",
@@ -42,8 +34,7 @@ export function getProductsQuery({
   keys = "",
   ids = "",
 } = {}) {
-  let products = readAllProducts();
-
+  let products = await readAllProducts();
   const idList = parseIdList(ids);
 
   if (idList.length) {
@@ -66,11 +57,10 @@ export function getProductsQuery({
   const keyIds = parseIdList(keys);
 
   if (query) {
-    const normalizedQuery = query.toLowerCase();
     products = products.filter(
       (product) =>
-        product.title.toLowerCase().includes(normalizedQuery) ||
-        product.id.toLowerCase().includes(normalizedQuery)
+        product.title.toLowerCase().includes(query) ||
+        product.id.toLowerCase().includes(query)
     );
   }
 
@@ -96,85 +86,64 @@ export function getProductsQuery({
     (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
   );
 
-  const total = products.length;
-  const totalPages = Math.max(1, Math.ceil(total / limit));
-  const safePage = Math.min(Math.max(page, 1), totalPages);
-  const start = (safePage - 1) * limit;
-
-  return {
-    products: products.slice(start, start + limit),
-    pagination: {
-      page: safePage,
-      limit,
-      total,
-      totalPages,
-    },
-  };
+  const { items, pagination } = paginateItems(products, page, limit);
+  return { products: items, pagination };
 }
 
-export function getProductById(id) {
-  return readAllProducts().find((product) => product.id === id) || null;
+export async function getProductById(id) {
+  const product = await getDocument(COLLECTION, id);
+  return product ? normalizeProduct(product) : null;
 }
 
-export function createProduct(input) {
+export async function createProduct(input) {
   const error = validateProduct(input);
 
   if (error) {
     return { success: false, error };
   }
 
-  const products = readAllProducts();
   const product = normalizeProduct({
     ...input,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   });
 
-  products.unshift(product);
-  writeProducts(products);
-
+  await setDocument(COLLECTION, product.id, product);
   return { success: true, product };
 }
 
-export function updateProduct(id, input) {
-  const products = readAllProducts();
-  const index = products.findIndex((product) => product.id === id);
+export async function updateProduct(id, input) {
+  const existing = await getProductById(id);
 
-  if (index === -1) {
+  if (!existing) {
     return { success: false, error: "Product not found." };
   }
 
-  const error = validateProduct({ ...products[index], ...input, id });
+  const error = validateProduct({ ...existing, ...input, id });
 
   if (error) {
     return { success: false, error };
   }
 
-  const product = normalizeProduct(
-    {
-      ...products[index],
-      ...input,
-      id,
-      createdAt: products[index].createdAt,
-      updatedAt: new Date().toISOString(),
-    },
-    index
-  );
+  const product = normalizeProduct({
+    ...existing,
+    ...input,
+    id,
+    createdAt: existing.createdAt,
+    updatedAt: new Date().toISOString(),
+  });
 
-  products[index] = product;
-  writeProducts(products);
-
+  await setDocument(COLLECTION, product.id, product);
   return { success: true, product };
 }
 
-export function deleteProduct(id) {
-  const products = readAllProducts();
-  const nextProducts = products.filter((product) => product.id !== id);
+export async function deleteProduct(id) {
+  const existing = await getProductById(id);
 
-  if (nextProducts.length === products.length) {
+  if (!existing) {
     return { success: false, error: "Product not found." };
   }
 
-  writeProducts(nextProducts);
+  await deleteDocument(COLLECTION, id);
   return { success: true };
 }

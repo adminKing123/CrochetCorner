@@ -23,7 +23,7 @@ export async function POST(request) {
     }
 
     const normalizedEmail = normalizeEmail(email);
-    const code = createOtp(normalizedEmail, type);
+    const code = await createOtp(normalizedEmail, type);
 
     await sendOtpEmail({
       to: normalizedEmail,

@@ -32,7 +32,7 @@ export function createPublicTaxonomyHandler(type) {
 
     try {
       const { queryParams } = parseListQueryParams(request);
-      const result = store.search(queryParams);
+      const result = await store.search(queryParams);
       return jsonSuccess(result);
     } catch (error) {
       console.error(`${type} GET error:`, error);
@@ -53,7 +53,7 @@ export function createAdminTaxonomyListHandler(type) {
     const store = getTaxonomyStore(type);
 
     try {
-      const result = store.listForAdmin(queryParams);
+      const result = await store.listForAdmin(queryParams);
       return jsonSuccess(result);
     } catch (error) {
       console.error(`admin ${type} GET error:`, error);
@@ -73,7 +73,7 @@ export function createAdminTaxonomyCreateHandler(type) {
       }
 
       const store = getTaxonomyStore(type);
-      const result = store.create(body.item);
+      const result = await store.create(body.item);
 
       if (!result.success) {
         return jsonError(result.error, 400);
@@ -100,7 +100,7 @@ export function createAdminTaxonomyItemHandlers(type) {
 
         const { id } = await params;
         const store = getTaxonomyStore(type);
-        const result = store.update(id, body.item);
+        const result = await store.update(id, body.item);
 
         if (!result.success) {
           return jsonError(result.error, 400);
@@ -123,7 +123,7 @@ export function createAdminTaxonomyItemHandlers(type) {
 
         const { id } = await params;
         const store = getTaxonomyStore(type);
-        const result = store.delete(id);
+        const result = await store.delete(id);
 
         if (!result.success) {
           return jsonError(result.error, 404);

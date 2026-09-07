@@ -15,7 +15,7 @@ function parseQueryParams(request) {
 
 export async function GET(request) {
   try {
-    const result = getCollectionsQuery(parseQueryParams(request));
+    const result = await getCollectionsQuery(parseQueryParams(request));
     return jsonSuccess(result);
   } catch (error) {
     console.error("collections GET error:", error);

@@ -1,5 +1,3 @@
-import fs from "fs";
-import path from "path";
 import { COLLECTIONS_PAGE_SIZE, defaultCollections } from "@/lib/collections/defaults";
 import { getProductById } from "@/lib/products/store";
 import {
@@ -7,68 +5,55 @@ import {
   sanitizeCollections,
   validateCollection,
 } from "@/lib/collections/validation";
+import {
+  FIRESTORE_COLLECTIONS,
+  getDocument,
+  listDocuments,
+  paginateItems,
+  seedDocuments,
+  setDocument,
+  deleteDocument,
+} from "@/lib/firebase/firestore";
 
-const STORE_PATH = path.join(process.cwd(), "data", "collections.json");
+const COLLECTION = FIRESTORE_COLLECTIONS.collections;
 
-function ensureStoreDir() {
-  const dir = path.dirname(STORE_PATH);
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
+async function readAllCollections() {
+  const collections = sanitizeCollections(await listDocuments(COLLECTION));
+
+  if (!collections.length) {
+    const seeded = sanitizeCollections(defaultCollections);
+    await seedDocuments(COLLECTION, seeded);
+    return seeded;
   }
+
+  return collections;
 }
 
-function readAllCollections() {
-  try {
-    if (fs.existsSync(STORE_PATH)) {
-      const data = JSON.parse(fs.readFileSync(STORE_PATH, "utf8"));
-      if (Array.isArray(data.collections)) {
-        return sanitizeCollections(data.collections);
-      }
-    }
-  } catch {
-    // Fall back to defaults.
-  }
+async function clearOtherWeeklyCollections(activeId) {
+  const collections = await readAllCollections();
+  const updates = collections.filter(
+    (item) => item.id !== activeId && item.isWeeklyCollection
+  );
 
-  return sanitizeCollections(defaultCollections);
+  await Promise.all(
+    updates.map((item) =>
+      setDocument(COLLECTION, item.id, {
+        ...item,
+        isWeeklyCollection: false,
+        updatedAt: new Date().toISOString(),
+      })
+    )
+  );
 }
 
-function writeCollections(collections) {
-  ensureStoreDir();
-  fs.writeFileSync(STORE_PATH, JSON.stringify({ collections }, null, 2));
-}
-
-function clearOtherWeeklyCollections(collections, activeId) {
-  return collections.map((item) => {
-    if (item.id === activeId || !item.isWeeklyCollection) {
-      return item;
-    }
-
-    return {
-      ...item,
-      isWeeklyCollection: false,
-      updatedAt: new Date().toISOString(),
-    };
-  });
-}
-
-function persistCollections(collections, weeklyCollectionId = null) {
-  const nextCollections = weeklyCollectionId
-    ? clearOtherWeeklyCollections(collections, weeklyCollectionId)
-    : collections;
-
-  writeCollections(nextCollections);
-  return nextCollections;
-}
-
-export function getCollectionsQuery({
+export async function getCollectionsQuery({
   page = 1,
   limit = COLLECTIONS_PAGE_SIZE,
   search = "",
   trending = "",
   weekly = "",
 } = {}) {
-  let collections = readAllCollections();
-
+  let collections = await readAllCollections();
   const query = search.trim().toLowerCase();
 
   if (query) {
@@ -96,33 +81,23 @@ export function getCollectionsQuery({
     (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
   );
 
-  const total = collections.length;
-  const totalPages = Math.max(1, Math.ceil(total / limit));
-  const safePage = Math.min(Math.max(page, 1), totalPages);
-  const start = (safePage - 1) * limit;
-
-  return {
-    collections: collections.slice(start, start + limit),
-    pagination: {
-      page: safePage,
-      limit,
-      total,
-      totalPages,
-    },
-  };
+  const { items, pagination } = paginateItems(collections, page, limit);
+  return { collections: items, pagination };
 }
 
-export function getCollectionProductsQuery(
+export async function getCollectionProductsQuery(
   collectionId,
   { page = 1, limit = 12, search = "" } = {}
 ) {
-  const collection = getCollectionById(collectionId);
+  const collection = await getCollectionById(collectionId);
 
   if (!collection) {
     return null;
   }
 
-  let products = collection.productIds.map((id) => getProductById(id)).filter(Boolean);
+  let products = (
+    await Promise.all(collection.productIds.map((id) => getProductById(id)))
+  ).filter(Boolean);
 
   const query = search.trim().toLowerCase();
 
@@ -134,99 +109,81 @@ export function getCollectionProductsQuery(
     );
   }
 
-  const total = products.length;
-  const totalPages = Math.max(1, Math.ceil(total / limit));
-  const safePage = Math.min(Math.max(page, 1), totalPages);
-  const start = (safePage - 1) * limit;
-
-  return {
-    collection,
-    products: products.slice(start, start + limit),
-    pagination: {
-      page: safePage,
-      limit,
-      total,
-      totalPages,
-    },
-  };
+  const { items, pagination } = paginateItems(products, page, limit);
+  return { collection, products: items, pagination };
 }
 
-export function getCollectionById(id) {
-  return readAllCollections().find((collection) => collection.id === id) || null;
+export async function getCollectionById(id) {
+  const collection = await getDocument(COLLECTION, id);
+  return collection ? normalizeCollection(collection) : null;
 }
 
-export function getWeeklyCollection() {
-  return readAllCollections().find((collection) => collection.isWeeklyCollection) || null;
+export async function getWeeklyCollection() {
+  const collections = await readAllCollections();
+  return collections.find((collection) => collection.isWeeklyCollection) || null;
 }
 
-export function createCollection(input) {
+export async function createCollection(input) {
   const error = validateCollection(input);
 
   if (error) {
     return { success: false, error };
   }
 
-  const collections = readAllCollections();
   const collection = normalizeCollection({
     ...input,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   });
 
-  collections.unshift(collection);
-  const nextCollections = persistCollections(
-    collections,
-    collection.isWeeklyCollection ? collection.id : null
-  );
+  await setDocument(COLLECTION, collection.id, collection);
 
-  return { success: true, collection: nextCollections.find((item) => item.id === collection.id) };
+  if (collection.isWeeklyCollection) {
+    await clearOtherWeeklyCollections(collection.id);
+  }
+
+  const saved = await getCollectionById(collection.id);
+  return { success: true, collection: saved };
 }
 
-export function updateCollection(id, input) {
-  const collections = readAllCollections();
-  const index = collections.findIndex((collection) => collection.id === id);
+export async function updateCollection(id, input) {
+  const existing = await getCollectionById(id);
 
-  if (index === -1) {
+  if (!existing) {
     return { success: false, error: "Collection not found." };
   }
 
-  const error = validateCollection({ ...collections[index], ...input, id });
+  const error = validateCollection({ ...existing, ...input, id });
 
   if (error) {
     return { success: false, error };
   }
 
-  const collection = normalizeCollection(
-    {
-      ...collections[index],
-      ...input,
-      id,
-      createdAt: collections[index].createdAt,
-      updatedAt: new Date().toISOString(),
-    },
-    index
-  );
+  const collection = normalizeCollection({
+    ...existing,
+    ...input,
+    id,
+    createdAt: existing.createdAt,
+    updatedAt: new Date().toISOString(),
+  });
 
-  collections[index] = collection;
-  const nextCollections = persistCollections(
-    collections,
-    collection.isWeeklyCollection ? collection.id : null
-  );
+  await setDocument(COLLECTION, collection.id, collection);
 
-  return {
-    success: true,
-    collection: nextCollections.find((item) => item.id === collection.id),
-  };
+  if (collection.isWeeklyCollection) {
+    await clearOtherWeeklyCollections(collection.id);
+  }
+
+  const saved = await getCollectionById(collection.id);
+  return { success: true, collection: saved };
 }
 
-export function deleteCollection(id) {
-  const collections = readAllCollections();
-  const nextCollections = collections.filter((collection) => collection.id !== id);
+export async function deleteCollection(id) {
+  const existing = await getCollectionById(id);
 
-  if (nextCollections.length === collections.length) {
+  if (!existing) {
     return { success: false, error: "Collection not found." };
   }
 
-  writeCollections(nextCollections);
+  await deleteDocument(COLLECTION, id);
   return { success: true };
 }

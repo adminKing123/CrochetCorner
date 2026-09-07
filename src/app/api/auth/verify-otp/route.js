@@ -27,14 +27,14 @@ export async function POST(request) {
     }
 
     const normalizedEmail = normalizeEmail(email);
-    const result = verifyOtp(normalizedEmail, type, code);
+    const result = await verifyOtp(normalizedEmail, type, code);
 
     if (!result.success) {
       return jsonError(result.error, 400);
     }
 
     if (type === otpTypes.emailVerification) {
-      markEmailVerified(normalizedEmail);
+      await markEmailVerified(normalizedEmail);
 
       const adminAuth = getAdminAuth();
       if (adminAuth) {
@@ -52,7 +52,7 @@ export async function POST(request) {
       });
     }
 
-    const resetToken = createResetToken(normalizedEmail);
+    const resetToken = await createResetToken(normalizedEmail);
 
     return jsonSuccess({
       success: true,

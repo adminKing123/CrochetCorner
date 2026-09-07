@@ -22,7 +22,7 @@ export async function GET(request) {
   }
 
   try {
-    const result = getShopOrdersQuery(parseQueryParams(request));
+    const result = await getShopOrdersQuery(parseQueryParams(request));
     return jsonSuccess(result);
   } catch (error) {
     console.error("admin shop-orders GET error:", error);

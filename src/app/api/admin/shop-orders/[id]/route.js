@@ -12,7 +12,7 @@ export async function PATCH(request, { params }) {
     }
 
     const { id } = await params;
-    const result = updateShopOrderStatus(id, body?.status);
+    const result = await updateShopOrderStatus(id, body?.status);
 
     if (!result.success) {
       return jsonError(result.error, 400);

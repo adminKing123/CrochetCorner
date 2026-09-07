@@ -1,5 +1,3 @@
-import fs from "fs";
-import path from "path";
 import { generateId } from "@/lib/generate-id";
 import {
   buildGithubUploadPath,
@@ -7,7 +5,7 @@ import {
   isGithubUploadConfigured,
   uploadFileToGithub,
 } from "@/lib/uploads/github";
-import { UPLOADS_PAGE_SIZE, defaultUploads } from "@/lib/uploads/defaults";
+import { UPLOADS_PAGE_SIZE } from "@/lib/uploads/defaults";
 import {
   normalizeUpload,
   sanitizeFilename,
@@ -15,51 +13,19 @@ import {
   validateUploadFile,
   validateUploadTitle,
 } from "@/lib/uploads/validation";
+import {
+  FIRESTORE_COLLECTIONS,
+  getDocument,
+  listDocuments,
+  paginateItems,
+  setDocument,
+  deleteDocument,
+} from "@/lib/firebase/firestore";
 
-const STORE_PATH = path.join(process.cwd(), "data", "uploads.json");
+const COLLECTION = FIRESTORE_COLLECTIONS.uploads;
 
-function ensureStoreDir() {
-  const dir = path.dirname(STORE_PATH);
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
-}
-
-function readAllUploads() {
-  try {
-    if (fs.existsSync(STORE_PATH)) {
-      const data = JSON.parse(fs.readFileSync(STORE_PATH, "utf8"));
-      if (Array.isArray(data.uploads)) {
-        return sanitizeUploads(data.uploads);
-      }
-    }
-  } catch {
-    // Fall back to defaults.
-  }
-
-  return sanitizeUploads(defaultUploads);
-}
-
-function writeUploads(uploads) {
-  ensureStoreDir();
-  fs.writeFileSync(STORE_PATH, JSON.stringify({ uploads }, null, 2));
-}
-
-function paginate(items, page, limit) {
-  const total = items.length;
-  const totalPages = Math.max(1, Math.ceil(total / limit));
-  const safePage = Math.min(Math.max(page, 1), totalPages);
-  const start = (safePage - 1) * limit;
-
-  return {
-    items: items.slice(start, start + limit),
-    pagination: {
-      page: safePage,
-      limit,
-      total,
-      totalPages,
-    },
-  };
+async function readAllUploads() {
+  return sanitizeUploads(await listDocuments(COLLECTION));
 }
 
 function buildStoredFilename(id, originalFilename) {
@@ -67,8 +33,8 @@ function buildStoredFilename(id, originalFilename) {
   return `${id}-${safeName}`;
 }
 
-export function getUploadsQuery({ page = 1, limit = UPLOADS_PAGE_SIZE, search = "" } = {}) {
-  let uploads = readAllUploads();
+export async function getUploadsQuery({ page = 1, limit = UPLOADS_PAGE_SIZE, search = "" } = {}) {
+  let uploads = await readAllUploads();
   const query = search.trim().toLowerCase();
 
   if (query) {
@@ -83,12 +49,13 @@ export function getUploadsQuery({ page = 1, limit = UPLOADS_PAGE_SIZE, search = 
 
   uploads.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
-  const { items, pagination } = paginate(uploads, page, limit);
+  const { items, pagination } = paginateItems(uploads, page, limit);
   return { uploads: items, pagination };
 }
 
-export function getUploadById(id) {
-  return readAllUploads().find((upload) => upload.id === id) || null;
+export async function getUploadById(id) {
+  const upload = await getDocument(COLLECTION, id);
+  return upload ? normalizeUpload(upload) : null;
 }
 
 export async function createUpload({ file, title = "" }) {
@@ -132,9 +99,7 @@ export async function createUpload({ file, title = "" }) {
       updatedAt: now,
     });
 
-    const uploads = readAllUploads();
-    uploads.unshift(upload);
-    writeUploads(uploads);
+    await setDocument(COLLECTION, upload.id, upload);
 
     return { success: true, upload };
   } catch (error) {
@@ -143,14 +108,12 @@ export async function createUpload({ file, title = "" }) {
 }
 
 export async function updateUpload(id, { file, title }) {
-  const uploads = readAllUploads();
-  const index = uploads.findIndex((upload) => upload.id === id);
+  const current = await getUploadById(id);
 
-  if (index === -1) {
+  if (!current) {
     return { success: false, error: "Upload not found." };
   }
 
-  const current = uploads[index];
   const nextTitle = title !== undefined ? title.trim() : current.title;
   const titleError = validateUploadTitle(nextTitle);
   if (titleError) {
@@ -164,8 +127,7 @@ export async function updateUpload(id, { file, title }) {
       updatedAt: new Date().toISOString(),
     });
 
-    uploads[index] = updatedUpload;
-    writeUploads(uploads);
+    await setDocument(COLLECTION, id, updatedUpload);
     return { success: true, upload: updatedUpload };
   }
 
@@ -194,8 +156,7 @@ export async function updateUpload(id, { file, title }) {
       updatedAt: new Date().toISOString(),
     });
 
-    uploads[index] = updatedUpload;
-    writeUploads(uploads);
+    await setDocument(COLLECTION, id, updatedUpload);
 
     return { success: true, upload: updatedUpload };
   } catch (error) {
@@ -204,14 +165,11 @@ export async function updateUpload(id, { file, title }) {
 }
 
 export async function deleteUpload(id) {
-  const uploads = readAllUploads();
-  const index = uploads.findIndex((upload) => upload.id === id);
+  const current = await getUploadById(id);
 
-  if (index === -1) {
+  if (!current) {
     return { success: false, error: "Upload not found." };
   }
-
-  const current = uploads[index];
 
   try {
     await deleteFileFromGithub({
@@ -220,8 +178,7 @@ export async function deleteUpload(id) {
       message: `Delete ${current.originalFilename}`,
     });
 
-    uploads.splice(index, 1);
-    writeUploads(uploads);
+    await deleteDocument(COLLECTION, id);
 
     return { success: true };
   } catch (error) {

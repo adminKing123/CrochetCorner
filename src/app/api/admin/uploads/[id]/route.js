@@ -12,7 +12,7 @@ export async function GET(request, { params }) {
 
   try {
     const { id } = await params;
-    const upload = getUploadById(id);
+    const upload = await getUploadById(id);
 
     if (!upload) {
       return jsonError("Upload not found.", 404);

@@ -4,7 +4,7 @@ import { getProductById } from "@/lib/products/store";
 export async function GET(_request, { params }) {
   try {
     const { id } = await params;
-    const product = getProductById(id);
+    const product = await getProductById(id);
 
     if (!product) {
       return jsonError("Product not found.", 404);
