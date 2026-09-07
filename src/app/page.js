@@ -3,8 +3,10 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { onAuthStateChanged, signOut } from "firebase/auth";
+import { authRoutes } from "@/config/site";
 import { auth } from "@/lib/firebase/client";
-import AuthCard, { AuthButton, AuthLink } from "@/components/auth/AuthCard";
+import AuthCard from "@/components/auth/AuthCard";
+import { AuthButton, AuthLink } from "@/components/auth/ui";
 
 export default function HomePage() {
   const router = useRouter();
@@ -17,7 +19,7 @@ export default function HomePage() {
       setLoading(false);
 
       if (!currentUser) {
-        router.replace("/login");
+        router.replace(authRoutes.login);
       }
     });
 
@@ -26,7 +28,7 @@ export default function HomePage() {
 
   async function handleSignOut() {
     await signOut(auth);
-    router.replace("/login");
+    router.replace(authRoutes.login);
   }
 
   if (loading) {
@@ -55,7 +57,7 @@ export default function HomePage() {
             Sign out
           </AuthButton>
           <div className="text-sm">
-            <AuthLink href="/login">Back to sign in</AuthLink>
+            <AuthLink href={authRoutes.login}>Back to sign in</AuthLink>
           </div>
         </div>
       </AuthCard>

@@ -1,23 +1,25 @@
-import { NextResponse } from "next/server";
+import { jsonError, jsonSuccess, normalizeEmail, parseJsonBody } from "@/lib/api/response";
 import { isEmailVerifiedLocally } from "@/lib/otp-store";
 
 export async function POST(request) {
   try {
-    const { email } = await request.json();
+    const body = await parseJsonBody(request);
 
-    if (!email) {
-      return NextResponse.json({ error: "Email is required." }, { status: 400 });
+    if (!body) {
+      return jsonError("Invalid request body.", 400);
     }
 
-    const normalizedEmail = email.toLowerCase().trim();
-    const verified = isEmailVerifiedLocally(normalizedEmail);
+    const { email } = body;
 
-    return NextResponse.json({ verified });
+    if (!email) {
+      return jsonError("Email is required.", 400);
+    }
+
+    const verified = isEmailVerifiedLocally(normalizeEmail(email));
+
+    return jsonSuccess({ verified });
   } catch (error) {
     console.error("check-verification error:", error);
-    return NextResponse.json(
-      { error: "Failed to check verification status." },
-      { status: 500 }
-    );
+    return jsonError("Failed to check verification status.", 500);
   }
 }

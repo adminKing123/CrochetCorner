@@ -1,36 +1,39 @@
-import { NextResponse } from "next/server";
+import { jsonError, jsonSuccess, normalizeEmail, parseJsonBody } from "@/lib/api/response";
 import { getAdminAuth } from "@/lib/firebase/admin";
+import { isValidOtpType } from "@/lib/auth/validation";
 import {
   createResetToken,
   markEmailVerified,
   verifyOtp,
 } from "@/lib/otp-store";
-
-const VALID_TYPES = ["email_verification", "password_reset"];
+import { otpTypes } from "@/config/site";
 
 export async function POST(request) {
   try {
-    const { email, code, type } = await request.json();
+    const body = await parseJsonBody(request);
+
+    if (!body) {
+      return jsonError("Invalid request body.", 400);
+    }
+
+    const { email, code, type } = body;
 
     if (!email || !code || !type) {
-      return NextResponse.json(
-        { error: "Email, code, and type are required." },
-        { status: 400 }
-      );
+      return jsonError("Email, code, and type are required.", 400);
     }
 
-    if (!VALID_TYPES.includes(type)) {
-      return NextResponse.json({ error: "Invalid OTP type." }, { status: 400 });
+    if (!isValidOtpType(type)) {
+      return jsonError("Invalid OTP type.", 400);
     }
 
-    const normalizedEmail = email.toLowerCase().trim();
+    const normalizedEmail = normalizeEmail(email);
     const result = verifyOtp(normalizedEmail, type, code);
 
     if (!result.success) {
-      return NextResponse.json({ error: result.error }, { status: 400 });
+      return jsonError(result.error, 400);
     }
 
-    if (type === "email_verification") {
+    if (type === otpTypes.emailVerification) {
       markEmailVerified(normalizedEmail);
 
       const adminAuth = getAdminAuth();
@@ -43,7 +46,7 @@ export async function POST(request) {
         }
       }
 
-      return NextResponse.json({
+      return jsonSuccess({
         success: true,
         message: "Email verified successfully.",
       });
@@ -51,16 +54,13 @@ export async function POST(request) {
 
     const resetToken = createResetToken(normalizedEmail);
 
-    return NextResponse.json({
+    return jsonSuccess({
       success: true,
       message: "Code verified. You can set a new password.",
       resetToken,
     });
   } catch (error) {
     console.error("verify-otp error:", error);
-    return NextResponse.json(
-      { error: "Failed to verify code." },
-      { status: 500 }
-    );
+    return jsonError("Failed to verify code.", 500);
   }
 }

@@ -1,25 +1,28 @@
 import { NextResponse } from "next/server";
+import { jsonError, jsonSuccess, normalizeEmail, parseJsonBody } from "@/lib/api/response";
+import { isValidOtpType } from "@/lib/auth/validation";
 import { sendOtpEmail } from "@/lib/email";
 import { createOtp } from "@/lib/otp-store";
 
-const VALID_TYPES = ["email_verification", "password_reset"];
-
 export async function POST(request) {
   try {
-    const { email, type } = await request.json();
+    const body = await parseJsonBody(request);
+
+    if (!body) {
+      return jsonError("Invalid request body.", 400);
+    }
+
+    const { email, type } = body;
 
     if (!email || !type) {
-      return NextResponse.json(
-        { error: "Email and type are required." },
-        { status: 400 }
-      );
+      return jsonError("Email and type are required.", 400);
     }
 
-    if (!VALID_TYPES.includes(type)) {
-      return NextResponse.json({ error: "Invalid OTP type." }, { status: 400 });
+    if (!isValidOtpType(type)) {
+      return jsonError("Invalid OTP type.", 400);
     }
 
-    const normalizedEmail = email.toLowerCase().trim();
+    const normalizedEmail = normalizeEmail(email);
     const code = createOtp(normalizedEmail, type);
 
     await sendOtpEmail({
@@ -28,12 +31,9 @@ export async function POST(request) {
       purpose: type === "password_reset" ? "password_reset" : "email_verification",
     });
 
-    return NextResponse.json({ success: true, message: "Verification code sent." });
+    return jsonSuccess({ success: true, message: "Verification code sent." });
   } catch (error) {
     console.error("send-otp error:", error);
-    return NextResponse.json(
-      { error: "Failed to send verification code. Check SMTP settings." },
-      { status: 500 }
-    );
+    return jsonError("Failed to send verification code. Check SMTP settings.", 500);
   }
 }

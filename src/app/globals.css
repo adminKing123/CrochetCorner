@@ -9,6 +9,8 @@
   --mint: #2d6a5e;
   --mint-dark: #1f4f46;
   --charcoal: #3d3d3d;
+  --yellow: #f9d56e;
+  --lavender: #c4b5fd;
 }
 
 @theme inline {
@@ -20,17 +22,65 @@
   --color-mint: var(--mint);
   --color-mint-dark: var(--mint-dark);
   --color-charcoal: var(--charcoal);
+  --color-yellow: var(--yellow);
+  --color-lavender: var(--lavender);
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  font-family: var(--font-body), "Nunito", sans-serif;
+}
+
+.font-display {
+  font-family: var(--font-display), "Fredoka", sans-serif;
+}
+
+.font-body {
+  font-family: var(--font-body), "Nunito", sans-serif;
 }
 
 .auth-bg {
+  background: var(--cream);
+}
+
+.auth-panel-left {
   background:
-    radial-gradient(circle at top left, rgba(232, 135, 111, 0.15), transparent 40%),
-    radial-gradient(circle at bottom right, rgba(45, 106, 94, 0.12), transparent 35%),
-    var(--cream);
+    radial-gradient(circle at 20% 80%, rgba(249, 213, 110, 0.35), transparent 45%),
+    radial-gradient(circle at 80% 20%, rgba(196, 181, 253, 0.3), transparent 40%),
+    linear-gradient(145deg, #e8876f 0%, #d46f58 45%, #2d6a5e 100%);
+}
+
+.auth-blob {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(40px);
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.auth-blob-1 {
+  top: 10%;
+  right: -10%;
+  width: 220px;
+  height: 220px;
+  background: #f9d56e;
+}
+
+.auth-blob-2 {
+  bottom: 15%;
+  left: -5%;
+  width: 180px;
+  height: 180px;
+  background: #c4b5fd;
+}
+
+.auth-blob-3 {
+  top: 50%;
+  left: 40%;
+  width: 120px;
+  height: 120px;
+  background: rgba(255, 248, 240, 0.6);
 }

@@ -2,13 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import AuthCard, {
-  AuthButton,
-  AuthError,
-  AuthInput,
-  AuthLink,
-  AuthSuccess,
-} from "@/components/auth/AuthCard";
+import { authRoutes, otpTypes } from "@/config/site";
+import { sendOtp } from "@/lib/auth/client-api";
+import AuthCard from "@/components/auth/AuthCard";
+import { AuthButton, AuthError, AuthInput, AuthLink, AuthSuccess } from "@/components/auth/ui";
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
@@ -24,28 +21,15 @@ export default function ForgotPasswordPage() {
     setLoading(true);
 
     try {
-      const response = await fetch("/api/auth/send-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: email.trim(),
-          type: "password_reset",
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        setError(data.error || "Failed to send reset code.");
-        return;
-      }
-
+      await sendOtp(email.trim(), otpTypes.passwordReset);
       setSuccess("Reset code sent! Redirecting...");
       setTimeout(() => {
-        router.push(`/reset-password?email=${encodeURIComponent(email.trim())}`);
+        router.push(
+          `${authRoutes.resetPassword}?email=${encodeURIComponent(email.trim())}`
+        );
       }, 1200);
-    } catch {
-      setError("Something went wrong. Please try again.");
+    } catch (err) {
+      setError(err.message);
     } finally {
       setLoading(false);
     }
@@ -57,7 +41,7 @@ export default function ForgotPasswordPage() {
       subtitle="Enter your email and we'll send a 6-digit reset code"
       footer={
         <>
-          Remember your password? <AuthLink href="/login">Sign in</AuthLink>
+          Remember your password? <AuthLink href={authRoutes.login}>Sign in</AuthLink>
         </>
       }
     >
