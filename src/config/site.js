@@ -90,6 +90,17 @@ export const navLinks = [
   { label: "Our Story", href: "#" },
 ];
 
+export const footerLinks = [
+  { label: "About Us", href: "#" },
+  { label: "Shop", href: authRoutes.shop },
+  { label: "Collections", href: authRoutes.collections },
+  { label: "Custom Orders", href: "#" },
+];
+
+export const contactInfo = {
+  location: "India",
+};
+
 export const profileMenuItems = [
   { label: "My Profile", href: "#" },
   { label: "My Orders", href: "#" },

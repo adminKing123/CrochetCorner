@@ -4,6 +4,7 @@ import BestSellersSection from "@/components/landing/BestSellersSection";
 import TrustBadgesSection from "@/components/landing/TrustBadgesSection";
 import TrendingCollectionsSection from "@/components/landing/TrendingCollectionsSection";
 import WeeklyCollectionSection from "@/components/landing/WeeklyCollectionSection";
+import Footer from "@/components/shared/Footer";
 
 export default function LandingPage() {
   return (
@@ -16,6 +17,7 @@ export default function LandingPage() {
         <TrendingCollectionsSection />
         <WeeklyCollectionSection />
       </main>
+      <Footer />
     </div>
   );
 }

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import CollectionDescription from "@/components/collections/CollectionDescription";
 import CollectionProductPreviewStrip from "@/components/collections/CollectionProductPreviewStrip";
 import ProductImage from "@/components/products/ProductImage";
 import { LandingSectionFooterLink } from "@/components/landing/LandingSection";
@@ -97,11 +98,10 @@ export default function WeeklyCollectionSection() {
             {collection.title}
           </h2>
 
-          {collection.description ? (
-            <p className="mt-4 line-clamp-6 font-body text-base leading-relaxed text-charcoal/70 md:text-lg">
-              {collection.description}
-            </p>
-          ) : null}
+          <CollectionDescription
+            description={collection.description}
+            className="mt-4 text-base md:text-lg"
+          />
 
           <CollectionProductPreviewStrip
             products={products}

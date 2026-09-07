@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import CollectionDescription from "@/components/collections/CollectionDescription";
 import ProductImage from "@/components/products/ProductImage";
 import { authRoutes } from "@/config/site";
 
@@ -60,11 +61,7 @@ export default function CollectionCard({
           {collection.title}
         </h3>
 
-        {collection.description ? (
-          <p className="line-clamp-2 font-body text-sm leading-relaxed text-charcoal/70">
-            {collection.description}
-          </p>
-        ) : null}
+        <CollectionDescription description={collection.description} />
 
         <p className="mt-auto font-body text-sm text-charcoal/55">{productLabel}</p>
       </div>

@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import Navbar from "@/components/landing/Navbar";
 import ShopPage from "@/components/shop/ShopPage";
+import Footer from "@/components/shared/Footer";
 import { createPageMetadata } from "@/lib/metadata";
 
 export const metadata = createPageMetadata("Shop", {
@@ -23,6 +24,7 @@ export default function ShopRoutePage() {
           <ShopPage />
         </Suspense>
       </main>
+      <Footer />
     </div>
   );
 }
