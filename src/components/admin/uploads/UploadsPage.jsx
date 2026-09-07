@@ -13,6 +13,12 @@ import {
   fetchUploadsAdmin,
   updateUploadAdmin,
 } from "@/lib/uploads/client-api";
+import { cropImageToAspectRatio } from "@/lib/uploads/crop-image";
+import {
+  UPLOAD_ASPECT_RATIOS,
+  UPLOAD_ASPECT_RATIO_LABELS,
+  UPLOAD_DEFAULT_ASPECT_RATIO,
+} from "@/lib/uploads/defaults";
 
 function formatDate(value) {
   return new Date(value).toLocaleString(undefined, {
@@ -30,6 +36,49 @@ function formatBytes(bytes) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+function getAspectClass(aspectRatio) {
+  return aspectRatio === "1/1" ? "aspect-square" : "aspect-[2/3]";
+}
+
+function formatAspectRatioLabel(aspectRatio) {
+  return UPLOAD_ASPECT_RATIO_LABELS[aspectRatio] || aspectRatio;
+}
+
+function AspectRatioSelector({ id, value, onChange, required = true }) {
+  return (
+    <fieldset className="block">
+      <legend className="mb-2 block font-body text-sm font-semibold text-charcoal">
+        Aspect ratio
+      </legend>
+      <div className="flex flex-wrap gap-3">
+        {UPLOAD_ASPECT_RATIOS.map((ratio) => (
+          <label
+            key={ratio}
+            htmlFor={`${id}-${ratio.replace("/", "-")}`}
+            className={`flex cursor-pointer items-center gap-2 rounded-2xl border px-4 py-3 font-body text-sm font-semibold transition ${
+              value === ratio
+                ? "border-peach bg-peach/10 text-peach-dark"
+                : "border-peach/20 bg-white text-charcoal hover:border-peach/40"
+            }`}
+          >
+            <input
+              id={`${id}-${ratio.replace("/", "-")}`}
+              type="radio"
+              name={id}
+              value={ratio}
+              checked={value === ratio}
+              required={required}
+              onChange={() => onChange(ratio)}
+              className="h-4 w-4 accent-peach-dark"
+            />
+            <span>{formatAspectRatioLabel(ratio)}</span>
+          </label>
+        ))}
+      </div>
+    </fieldset>
+  );
+}
+
 export default function UploadsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -44,11 +93,13 @@ export default function UploadsPage() {
   const [searchInput, setSearchInput] = useState(searchParams.get("search") || "");
   const [uploadTitle, setUploadTitle] = useState("");
   const [uploadFile, setUploadFile] = useState(null);
+  const [uploadAspectRatio, setUploadAspectRatio] = useState(UPLOAD_DEFAULT_ASPECT_RATIO);
   const [uploading, setUploading] = useState(false);
 
   const [editingId, setEditingId] = useState("");
   const [editTitle, setEditTitle] = useState("");
   const [editFile, setEditFile] = useState(null);
+  const [editAspectRatio, setEditAspectRatio] = useState(UPLOAD_DEFAULT_ASPECT_RATIO);
   const [savingEdit, setSavingEdit] = useState(false);
 
   const page = Number(searchParams.get("page") || 1);
@@ -92,10 +143,16 @@ export default function UploadsPage() {
     setUploading(true);
 
     try {
-      await createUploadAdmin(email, { file: uploadFile, title: uploadTitle.trim() });
-      setSuccess("Image uploaded to GitHub.");
+      const croppedFile = await cropImageToAspectRatio(uploadFile, uploadAspectRatio);
+      await createUploadAdmin(email, {
+        file: croppedFile,
+        title: uploadTitle.trim(),
+        aspectRatio: uploadAspectRatio,
+      });
+      setSuccess("Image uploaded.");
       setUploadTitle("");
       setUploadFile(null);
+      setUploadAspectRatio(UPLOAD_DEFAULT_ASPECT_RATIO);
       if (event.currentTarget instanceof HTMLFormElement) {
         event.currentTarget.reset();
       }
@@ -111,12 +168,14 @@ export default function UploadsPage() {
     setEditingId(upload.id);
     setEditTitle(upload.title);
     setEditFile(null);
+    setEditAspectRatio(upload.aspectRatio || UPLOAD_DEFAULT_ASPECT_RATIO);
   }
 
   function cancelEdit() {
     setEditingId("");
     setEditTitle("");
     setEditFile(null);
+    setEditAspectRatio(UPLOAD_DEFAULT_ASPECT_RATIO);
   }
 
   async function handleEditSubmit(event) {
@@ -128,9 +187,14 @@ export default function UploadsPage() {
     setSavingEdit(true);
 
     try {
+      const croppedFile = editFile
+        ? await cropImageToAspectRatio(editFile, editAspectRatio)
+        : null;
+
       await updateUploadAdmin(email, editingId, {
         title: editTitle.trim(),
-        file: editFile,
+        file: croppedFile,
+        aspectRatio: editAspectRatio,
       });
       setSuccess("Upload updated.");
       cancelEdit();
@@ -203,6 +267,16 @@ export default function UploadsPage() {
           </label>
         </div>
 
+        <AspectRatioSelector
+          id="upload-aspect-ratio"
+          value={uploadAspectRatio}
+          onChange={setUploadAspectRatio}
+        />
+
+        <p className="font-body text-xs text-charcoal/60">
+          Images that do not match the selected ratio will be center-cropped before upload.
+        </p>
+
         <AuthButton type="submit" disabled={uploading || !uploadFile}>
           {uploading ? "Uploading..." : "Upload"}
         </AuthButton>
@@ -247,7 +321,7 @@ export default function UploadsPage() {
               key={upload.id}
               className="overflow-hidden rounded-2xl border border-peach/20 bg-white shadow-sm"
             >
-              <div className="aspect-square bg-peach/5">
+              <div className={`${getAspectClass(upload.aspectRatio)} bg-peach/5`}>
                 <img src={upload.url} alt={upload.title} className="h-full w-full object-cover" />
               </div>
 
@@ -271,6 +345,11 @@ export default function UploadsPage() {
                         className="block w-full font-body text-sm text-charcoal file:mr-4 file:rounded-full file:border-0 file:bg-peach/15 file:px-4 file:py-2 file:font-semibold file:text-peach-dark"
                       />
                     </label>
+                    <AspectRatioSelector
+                      id={`edit-aspect-ratio-${upload.id}`}
+                      value={editAspectRatio}
+                      onChange={setEditAspectRatio}
+                    />
                     <div className="flex gap-2">
                       <AuthButton type="submit" disabled={savingEdit}>
                         {savingEdit ? "Saving..." : "Save"}
@@ -287,7 +366,12 @@ export default function UploadsPage() {
                 ) : (
                   <>
                     <div>
-                      <h3 className="font-body text-sm font-bold text-charcoal">{upload.title}</h3>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h3 className="font-body text-sm font-bold text-charcoal">{upload.title}</h3>
+                        <span className="rounded-full bg-peach/10 px-2.5 py-1 font-body text-[11px] font-semibold text-peach-dark">
+                          {formatAspectRatioLabel(upload.aspectRatio)}
+                        </span>
+                      </div>
                       <p className="mt-1 font-body text-xs text-charcoal/50">
                         {upload.originalFilename} · {formatBytes(upload.size)}
                       </p>

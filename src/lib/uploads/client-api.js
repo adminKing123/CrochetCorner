@@ -37,10 +37,11 @@ export async function fetchUploadAdmin(email, id) {
   return parseResponse(response);
 }
 
-export async function createUploadAdmin(email, { file, title = "" }) {
+export async function createUploadAdmin(email, { file, title = "", aspectRatio }) {
   const formData = new FormData();
   formData.append("email", email);
   formData.append("title", title);
+  formData.append("aspectRatio", aspectRatio);
   formData.append("file", file);
 
   const response = await fetch("/api/admin/uploads", {
@@ -50,11 +51,14 @@ export async function createUploadAdmin(email, { file, title = "" }) {
   return parseResponse(response);
 }
 
-export async function updateUploadAdmin(email, id, { file, title }) {
+export async function updateUploadAdmin(email, id, { file, title, aspectRatio }) {
   const formData = new FormData();
   formData.append("email", email);
   if (title !== undefined) {
     formData.append("title", title);
+  }
+  if (aspectRatio !== undefined) {
+    formData.append("aspectRatio", aspectRatio);
   }
   if (file) {
     formData.append("file", file);

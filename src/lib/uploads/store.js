@@ -10,6 +10,7 @@ import {
   normalizeUpload,
   sanitizeFilename,
   sanitizeUploads,
+  validateAspectRatio,
   validateUploadFile,
   validateUploadTitle,
 } from "@/lib/uploads/validation";
@@ -58,9 +59,14 @@ export async function getUploadById(id) {
   return upload ? normalizeUpload(upload) : null;
 }
 
-export async function createUpload({ file, title = "" }) {
+export async function createUpload({ file, title = "", aspectRatio }) {
   if (!isGithubUploadConfigured()) {
     return { success: false, error: "GitHub upload is not configured on the server." };
+  }
+
+  const aspectRatioError = validateAspectRatio(aspectRatio);
+  if (aspectRatioError) {
+    return { success: false, error: aspectRatioError };
   }
 
   const fileError = validateUploadFile(file);
@@ -94,6 +100,7 @@ export async function createUpload({ file, title = "" }) {
       url: githubResult.rawUrl,
       githubSha: githubResult.githubSha,
       mimeType: file.type,
+      aspectRatio,
       size: file.size,
       createdAt: now,
       updatedAt: now,
@@ -107,7 +114,7 @@ export async function createUpload({ file, title = "" }) {
   }
 }
 
-export async function updateUpload(id, { file, title }) {
+export async function updateUpload(id, { file, title, aspectRatio }) {
   const current = await getUploadById(id);
 
   if (!current) {
@@ -120,10 +127,17 @@ export async function updateUpload(id, { file, title }) {
     return { success: false, error: titleError };
   }
 
+  const nextAspectRatio = aspectRatio !== undefined ? aspectRatio : current.aspectRatio;
+  const aspectRatioError = validateAspectRatio(nextAspectRatio);
+  if (aspectRatioError) {
+    return { success: false, error: aspectRatioError };
+  }
+
   if (!file) {
     const updatedUpload = normalizeUpload({
       ...current,
       title: nextTitle || current.originalFilename,
+      aspectRatio: nextAspectRatio,
       updatedAt: new Date().toISOString(),
     });
 
@@ -152,6 +166,7 @@ export async function updateUpload(id, { file, title }) {
       url: githubResult.rawUrl,
       githubSha: githubResult.githubSha,
       mimeType: file.type,
+      aspectRatio: nextAspectRatio,
       size: file.size,
       updatedAt: new Date().toISOString(),
     });

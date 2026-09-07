@@ -1,4 +1,9 @@
-import { UPLOAD_ALLOWED_MIME_TYPES, UPLOAD_MAX_BYTES } from "@/lib/uploads/defaults";
+import {
+  UPLOAD_ALLOWED_MIME_TYPES,
+  UPLOAD_ASPECT_RATIOS,
+  UPLOAD_DEFAULT_ASPECT_RATIO,
+  UPLOAD_MAX_BYTES,
+} from "@/lib/uploads/defaults";
 
 function normalizeText(value) {
   return typeof value === "string" ? value.trim() : "";
@@ -13,6 +18,13 @@ export function sanitizeFilename(filename = "") {
     .replace(/^-|-$/g, "");
 }
 
+export function normalizeAspectRatio(value) {
+  const normalized = normalizeText(value);
+  return UPLOAD_ASPECT_RATIOS.includes(normalized)
+    ? normalized
+    : UPLOAD_DEFAULT_ASPECT_RATIO;
+}
+
 export function normalizeUpload(upload = {}) {
   return {
     id: normalizeText(upload.id),
@@ -22,6 +34,7 @@ export function normalizeUpload(upload = {}) {
     url: normalizeText(upload.url),
     githubSha: normalizeText(upload.githubSha),
     mimeType: normalizeText(upload.mimeType),
+    aspectRatio: normalizeAspectRatio(upload.aspectRatio),
     size: Number(upload.size) || 0,
     createdAt: upload.createdAt || new Date().toISOString(),
     updatedAt: upload.updatedAt || new Date().toISOString(),
@@ -51,6 +64,18 @@ export function validateUploadFile(file) {
 export function validateUploadTitle(title) {
   if (title && title.length > 120) {
     return "Title must be 120 characters or fewer.";
+  }
+
+  return null;
+}
+
+export function validateAspectRatio(aspectRatio) {
+  if (!aspectRatio) {
+    return "Please select an aspect ratio.";
+  }
+
+  if (!UPLOAD_ASPECT_RATIOS.includes(aspectRatio)) {
+    return "Aspect ratio must be 1:1 or 2:3.";
   }
 
   return null;

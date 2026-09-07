@@ -37,10 +37,14 @@ export async function PUT(request, { params }) {
     const { id } = await params;
     const file = formData.get("file");
     const title = formData.has("title") ? String(formData.get("title") || "") : undefined;
+    const aspectRatio = formData.has("aspectRatio")
+      ? String(formData.get("aspectRatio") || "")
+      : undefined;
 
     const result = await updateUpload(id, {
       file: file && typeof file !== "string" ? file : null,
       title,
+      aspectRatio,
     });
 
     if (!result.success) {

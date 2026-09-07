@@ -8,4 +8,13 @@ export const UPLOAD_ALLOWED_MIME_TYPES = [
   "image/gif",
 ];
 
+export const UPLOAD_ASPECT_RATIOS = ["1/1", "2/3"];
+
+export const UPLOAD_DEFAULT_ASPECT_RATIO = "1/1";
+
+export const UPLOAD_ASPECT_RATIO_LABELS = {
+  "1/1": "Square (1:1)",
+  "2/3": "Portrait (2:3)",
+};
+
 export const defaultUploads = [];

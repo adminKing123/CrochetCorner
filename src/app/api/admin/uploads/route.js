@@ -40,12 +40,13 @@ export async function POST(request) {
 
     const file = formData.get("file");
     const title = String(formData.get("title") || "");
+    const aspectRatio = String(formData.get("aspectRatio") || "");
 
     if (!(file instanceof File) || file.size === 0) {
       return jsonError("Please choose an image file to upload.", 400);
     }
 
-    const result = await createUpload({ file, title });
+    const result = await createUpload({ file, title, aspectRatio });
 
     if (!result.success) {
       return jsonError(result.error, 400);
