@@ -1,3 +1,5 @@
+import { BEST_SELLERS_LIMIT } from "@/lib/products/defaults";
+
 function buildQuery(params = {}) {
   const searchParams = new URLSearchParams();
 
@@ -26,6 +28,11 @@ export async function fetchProducts(params = {}) {
     cache: "no-store",
   });
   return parseResponse(response);
+}
+
+export async function fetchBestSellers(limit = BEST_SELLERS_LIMIT) {
+  const data = await fetchProducts({ bestSeller: "true", limit, page: 1 });
+  return data.products || [];
 }
 
 export async function fetchProduct(id) {
