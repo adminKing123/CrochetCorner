@@ -11,6 +11,7 @@ export function normalizeCollection(collection, index = 0) {
       ? collection.productIds.filter(Boolean)
       : [],
     isTrending: Boolean(collection.isTrending),
+    isWeeklyCollection: Boolean(collection.isWeeklyCollection),
     createdAt: collection.createdAt || new Date().toISOString(),
     updatedAt: collection.updatedAt || new Date().toISOString(),
   };
@@ -38,6 +39,7 @@ export function createEmptyCollection() {
     imagePortrait: "",
     productIds: [],
     isTrending: false,
+    isWeeklyCollection: false,
   });
 }
 

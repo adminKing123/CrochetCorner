@@ -35,6 +35,25 @@ export async function fetchBestSellers(limit = BEST_SELLERS_LIMIT) {
   return data.products || [];
 }
 
+export async function fetchPublicProductsByIds(ids = [], limit) {
+  if (!ids.length) {
+    return [];
+  }
+
+  const data = await fetchProducts({
+    ids: ids.join(","),
+    limit: limit ?? ids.length,
+    page: 1,
+  });
+
+  const productMap = new Map((data.products || []).map((product) => [product.id, product]));
+
+  return ids
+    .map((id) => productMap.get(id))
+    .filter(Boolean)
+    .slice(0, limit ?? ids.length);
+}
+
 export async function fetchProduct(id) {
   const response = await fetch(`/api/products/${id}`, { cache: "no-store" });
   return parseResponse(response);

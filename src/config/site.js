@@ -15,6 +15,8 @@ export const siteConfig = {
 export const authRoutes = {
   home: "/",
   shop: "/shop",
+  collections: "/collections",
+  collectionDetail: (id) => `/collections/${id}`,
   login: "/login",
   signup: "/signup",
   verifyEmail: "/verify-email",

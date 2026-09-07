@@ -157,6 +157,11 @@ export default function CollectionListPage() {
                       Trending
                     </span>
                   ) : null}
+                  {collection.isWeeklyCollection ? (
+                    <span className="rounded-full bg-mint/15 px-3 py-1 font-body text-xs font-semibold text-mint-dark">
+                      Weekly collection
+                    </span>
+                  ) : null}
                 </div>
                 {collection.description ? (
                   <p className="mt-2 line-clamp-2 font-body text-sm text-charcoal/70">

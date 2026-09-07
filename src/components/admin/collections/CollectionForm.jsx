@@ -75,8 +75,8 @@ export default function CollectionForm({
           placeholder="Summer cozy picks"
           required
         />
-        <div className="flex items-end">
-          <label className="flex items-center gap-3 rounded-2xl border border-peach/20 bg-white px-4 py-3 font-body text-sm font-semibold text-charcoal">
+        <div className="flex flex-col gap-3 md:col-span-2 md:flex-row">
+          <label className="flex flex-1 items-center gap-3 rounded-2xl border border-peach/20 bg-white px-4 py-3 font-body text-sm font-semibold text-charcoal">
             <input
               type="checkbox"
               checked={collection.isTrending}
@@ -84,6 +84,21 @@ export default function CollectionForm({
               className="h-4 w-4 accent-mint"
             />
             Mark as trending
+          </label>
+          <label className="flex flex-1 items-start gap-3 rounded-2xl border border-peach/20 bg-white px-4 py-3 font-body text-sm font-semibold text-charcoal">
+            <input
+              type="checkbox"
+              checked={collection.isWeeklyCollection}
+              onChange={(event) => updateField("isWeeklyCollection", event.target.checked)}
+              className="mt-0.5 h-4 w-4 shrink-0 accent-mint"
+            />
+            <span>
+              Mark as weekly collection
+              <span className="mt-1 block font-body text-xs font-normal text-charcoal/60">
+                Only one collection can be weekly. Saving this will remove the flag from any other
+                collection.
+              </span>
+            </span>
           </label>
         </div>
         <AuthInput

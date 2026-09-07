@@ -36,6 +36,29 @@ function writeCollections(collections) {
   fs.writeFileSync(STORE_PATH, JSON.stringify({ collections }, null, 2));
 }
 
+function clearOtherWeeklyCollections(collections, activeId) {
+  return collections.map((item) => {
+    if (item.id === activeId || !item.isWeeklyCollection) {
+      return item;
+    }
+
+    return {
+      ...item,
+      isWeeklyCollection: false,
+      updatedAt: new Date().toISOString(),
+    };
+  });
+}
+
+function persistCollections(collections, weeklyCollectionId = null) {
+  const nextCollections = weeklyCollectionId
+    ? clearOtherWeeklyCollections(collections, weeklyCollectionId)
+    : collections;
+
+  writeCollections(nextCollections);
+  return nextCollections;
+}
+
 export function getCollectionsQuery({
   page = 1,
   limit = COLLECTIONS_PAGE_SIZE,
@@ -85,6 +108,10 @@ export function getCollectionById(id) {
   return readAllCollections().find((collection) => collection.id === id) || null;
 }
 
+export function getWeeklyCollection() {
+  return readAllCollections().find((collection) => collection.isWeeklyCollection) || null;
+}
+
 export function createCollection(input) {
   const error = validateCollection(input);
 
@@ -100,9 +127,12 @@ export function createCollection(input) {
   });
 
   collections.unshift(collection);
-  writeCollections(collections);
+  const nextCollections = persistCollections(
+    collections,
+    collection.isWeeklyCollection ? collection.id : null
+  );
 
-  return { success: true, collection };
+  return { success: true, collection: nextCollections.find((item) => item.id === collection.id) };
 }
 
 export function updateCollection(id, input) {
@@ -131,9 +161,15 @@ export function updateCollection(id, input) {
   );
 
   collections[index] = collection;
-  writeCollections(collections);
+  const nextCollections = persistCollections(
+    collections,
+    collection.isWeeklyCollection ? collection.id : null
+  );
 
-  return { success: true, collection };
+  return {
+    success: true,
+    collection: nextCollections.find((item) => item.id === collection.id),
+  };
 }
 
 export function deleteCollection(id) {

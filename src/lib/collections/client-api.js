@@ -1,3 +1,5 @@
+import { TRENDING_COLLECTIONS_LIMIT } from "@/lib/collections/defaults";
+
 function buildQuery(params = {}) {
   const searchParams = new URLSearchParams();
 
@@ -26,6 +28,17 @@ export async function fetchCollections(params = {}) {
     cache: "no-store",
   });
   return parseResponse(response);
+}
+
+export async function fetchTrendingCollections(limit = TRENDING_COLLECTIONS_LIMIT) {
+  const data = await fetchCollections({ trending: "true", limit, page: 1 });
+  return data.collections || [];
+}
+
+export async function fetchWeeklyCollection() {
+  const response = await fetch("/api/collections/weekly", { cache: "no-store" });
+  const data = await parseResponse(response);
+  return data.collection || null;
 }
 
 export async function fetchCollection(id) {
