@@ -22,6 +22,19 @@ export const authRoutes = {
   admin: "/admin",
 };
 
+export const adminRoutes = {
+  root: "/admin",
+  heroCarousel: "/admin/hero-carousel",
+};
+
+export const adminNavItems = [
+  {
+    label: "Hero Carousel",
+    href: adminRoutes.heroCarousel,
+    icon: "IoImagesOutline",
+  },
+];
+
 export const navLinks = [
   { label: "Shop", href: "#" },
   { label: "Collections", href: "#" },
@@ -34,21 +47,6 @@ export const profileMenuItems = [
   { label: "My Orders", href: "#" },
   { label: "Settings", href: "#" },
   { label: "Log out", action: "logout" },
-];
-
-export const heroSlides = [
-  {
-    src: "https://picsum.photos/seed/crochet-corner-1/1920/640",
-    alt: "Crochet Corner hero slide 1",
-  },
-  {
-    src: "https://picsum.photos/seed/crochet-corner-2/1920/640",
-    alt: "Crochet Corner hero slide 2",
-  },
-  {
-    src: "https://picsum.photos/seed/crochet-corner-3/1920/640",
-    alt: "Crochet Corner hero slide 3",
-  },
 ];
 
 export const otpTypes = {

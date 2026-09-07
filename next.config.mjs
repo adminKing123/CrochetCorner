@@ -9,6 +9,10 @@ const nextConfig = {
         protocol: "https",
         hostname: "picsum.photos",
       },
+      {
+        protocol: "https",
+        hostname: "m.media-amazon.com",
+      },
     ],
   },
 };

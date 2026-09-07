@@ -1,12 +1,11 @@
 import { redirect } from "next/navigation";
-import { authRoutes } from "@/config/site";
+import { adminRoutes, authRoutes } from "@/config/site";
 import { isAdminEmailConfigured } from "@/lib/auth/admin";
-import AdminPageClient from "@/components/admin/AdminPageClient";
 
-export default function AdminPage() {
+export default function AdminIndexPage() {
   if (!isAdminEmailConfigured()) {
     redirect(authRoutes.home);
   }
 
-  return <AdminPageClient />;
+  redirect(adminRoutes.heroCarousel);
 }
