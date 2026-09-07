@@ -3,16 +3,27 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { signOut } from "firebase/auth";
-import { profileMenuItems } from "@/config/site";
+import { IoChevronDown } from "react-icons/io5";
+import { authRoutes, profileMenuItems } from "@/config/site";
 import { auth } from "@/lib/firebase/client";
+import { isAdminUser } from "@/lib/auth/admin-client";
 import UserAvatar from "@/components/landing/UserAvatar";
 
 export default function ProfileDropdown({ user }) {
   const [open, setOpen] = useState(false);
   const menuRef = useRef(null);
+  const isAdmin = isAdminUser(user);
 
   const displayName = user.displayName || "My account";
   const email = user.email || "";
+
+  const menuItems = isAdmin
+    ? [
+        ...profileMenuItems.filter((item) => item.action !== "logout"),
+        { label: "Admin Panel", href: authRoutes.admin },
+        ...profileMenuItems.filter((item) => item.action === "logout"),
+      ]
+    : profileMenuItems;
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -58,9 +69,15 @@ export default function ProfileDropdown({ user }) {
         aria-expanded={open}
         aria-haspopup="menu"
         aria-label="Open profile menu"
-        className="flex items-center justify-center rounded-full p-0 transition hover:ring-2 hover:ring-peach/40 focus:outline-none focus:ring-2 focus:ring-mint/40"
+        className="flex items-center justify-center gap-1 rounded-full p-0 transition hover:ring-2 hover:ring-peach/40 focus:outline-none focus:ring-2 focus:ring-mint/40"
       >
         <UserAvatar user={user} />
+        <IoChevronDown
+          className={`hidden h-4 w-4 text-charcoal/60 transition-transform sm:block ${
+            open ? "rotate-180" : ""
+          }`}
+          aria-hidden="true"
+        />
       </button>
 
       {open ? (
@@ -78,7 +95,7 @@ export default function ProfileDropdown({ user }) {
           </div>
 
           <ul className="py-1">
-            {profileMenuItems.map((item) =>
+            {menuItems.map((item) =>
               item.action === "logout" ? (
                 <li key={item.label}>
                   <button
@@ -96,7 +113,11 @@ export default function ProfileDropdown({ user }) {
                     href={item.href}
                     role="menuitem"
                     onClick={() => handleItemClick(item)}
-                    className="block px-4 py-2.5 font-body text-sm text-charcoal/80 transition hover:bg-peach/10 hover:text-mint"
+                    className={`block px-4 py-2.5 font-body text-sm transition hover:bg-peach/10 ${
+                      item.label === "Admin Panel"
+                        ? "font-semibold text-mint hover:text-mint-dark"
+                        : "text-charcoal/80 hover:text-mint"
+                    }`}
                   >
                     {item.label}
                   </Link>

@@ -19,6 +19,7 @@ export const authRoutes = {
   verifyEmail: "/verify-email",
   forgotPassword: "/forgot-password",
   resetPassword: "/reset-password",
+  admin: "/admin",
 };
 
 export const navLinks = [
@@ -35,15 +36,20 @@ export const profileMenuItems = [
   { label: "Log out", action: "logout" },
 ];
 
-export const landingCopy = {
-  hero: {
-    title: "Your cozy corner for crochet",
-    subtitle:
-      "Discover patterns, share your projects, and connect with fellow crocheters — one loop at a time.",
-    primaryCta: "Get started free",
-    secondaryCta: "Sign in",
+export const heroSlides = [
+  {
+    src: "https://picsum.photos/seed/crochet-corner-1/1920/640",
+    alt: "Crochet Corner hero slide 1",
   },
-};
+  {
+    src: "https://picsum.photos/seed/crochet-corner-2/1920/640",
+    alt: "Crochet Corner hero slide 2",
+  },
+  {
+    src: "https://picsum.photos/seed/crochet-corner-3/1920/640",
+    alt: "Crochet Corner hero slide 3",
+  },
+];
 
 export const otpTypes = {
   emailVerification: "email_verification",

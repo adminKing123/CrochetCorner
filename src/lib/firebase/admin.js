@@ -1,8 +1,9 @@
-import admin from "firebase-admin";
+import { cert, getApps, initializeApp } from "firebase-admin/app";
+import { getAuth } from "firebase-admin/auth";
 
 function getAdminApp() {
-  if (admin.apps.length) {
-    return admin.apps[0];
+  if (getApps().length) {
+    return getApps()[0];
   }
 
   const projectId =
@@ -10,14 +11,14 @@ function getAdminApp() {
 
   if (process.env.FIREBASE_SERVICE_ACCOUNT) {
     const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-    return admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount),
+    return initializeApp({
+      credential: cert(serviceAccount),
       projectId,
     });
   }
 
   if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
-    return admin.initializeApp({ projectId });
+    return initializeApp({ projectId });
   }
 
   return null;
@@ -25,7 +26,7 @@ function getAdminApp() {
 
 export function getAdminAuth() {
   const app = getAdminApp();
-  return app ? admin.auth(app) : null;
+  return app ? getAuth(app) : null;
 }
 
 export function isAdminConfigured() {

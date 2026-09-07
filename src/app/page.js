@@ -1,12 +1,12 @@
 import Navbar from "@/components/landing/Navbar";
-import Hero from "@/components/landing/Hero";
+import HeroCarousel from "@/components/landing/HeroCarousel";
 
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-cream">
       <Navbar />
       <main>
-        <Hero />
+        <HeroCarousel />
       </main>
     </div>
   );
