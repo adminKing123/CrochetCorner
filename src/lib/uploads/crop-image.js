@@ -1,12 +1,5 @@
-function parseAspectRatio(value) {
-  const [width, height] = String(value).split("/").map(Number);
-
-  if (!width || !height) {
-    return null;
-  }
-
-  return width / height;
-}
+import { UPLOAD_ASPECT_RATIO_CUSTOM } from "@/lib/uploads/defaults";
+import { parseAspectRatio, simplifyAspectRatio } from "@/lib/uploads/aspect-ratio";
 
 function loadImageFromFile(file) {
   return new Promise((resolve, reject) => {
@@ -97,6 +90,11 @@ function needsCrop(sourceWidth, sourceHeight, targetRatio) {
   return Math.abs(sourceRatio - targetRatio) > 0.005 || cropX > 0.5 || cropY > 0.5;
 }
 
+export async function detectImageAspectRatio(file) {
+  const image = await loadImageFromFile(file);
+  return simplifyAspectRatio(image.naturalWidth, image.naturalHeight);
+}
+
 export async function cropImageToAspectRatio(file, aspectRatio) {
   const targetRatio = parseAspectRatio(aspectRatio);
 
@@ -146,4 +144,18 @@ export async function cropImageToAspectRatio(file, aspectRatio) {
   return new File([blob], `${baseName}${getOutputExtension(outputType)}`, {
     type: outputType,
   });
+}
+
+export async function prepareUploadImage(file, selectedMode, existingAspectRatio = "") {
+  if (selectedMode === UPLOAD_ASPECT_RATIO_CUSTOM) {
+    return {
+      file,
+      aspectRatio: await detectImageAspectRatio(file),
+    };
+  }
+
+  return {
+    file: await cropImageToAspectRatio(file, selectedMode),
+    aspectRatio: selectedMode,
+  };
 }

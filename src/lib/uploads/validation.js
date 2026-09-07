@@ -1,9 +1,14 @@
 import {
   UPLOAD_ALLOWED_MIME_TYPES,
-  UPLOAD_ASPECT_RATIOS,
+  UPLOAD_ASPECT_RATIO_CUSTOM,
   UPLOAD_DEFAULT_ASPECT_RATIO,
+  UPLOAD_FIXED_ASPECT_RATIOS,
   UPLOAD_MAX_BYTES,
 } from "@/lib/uploads/defaults";
+import {
+  isStoredAspectRatio,
+  normalizeStoredAspectRatio,
+} from "@/lib/uploads/aspect-ratio";
 
 function normalizeText(value) {
   return typeof value === "string" ? value.trim() : "";
@@ -19,10 +24,7 @@ export function sanitizeFilename(filename = "") {
 }
 
 export function normalizeAspectRatio(value) {
-  const normalized = normalizeText(value);
-  return UPLOAD_ASPECT_RATIOS.includes(normalized)
-    ? normalized
-    : UPLOAD_DEFAULT_ASPECT_RATIO;
+  return normalizeStoredAspectRatio(value);
 }
 
 export function normalizeUpload(upload = {}) {
@@ -74,9 +76,16 @@ export function validateAspectRatio(aspectRatio) {
     return "Please select an aspect ratio.";
   }
 
-  if (!UPLOAD_ASPECT_RATIOS.includes(aspectRatio)) {
-    return "Aspect ratio must be 1:1 or 2:3.";
+  if (aspectRatio === UPLOAD_ASPECT_RATIO_CUSTOM) {
+    return "Custom aspect ratio must be detected from the image before upload.";
   }
 
-  return null;
+  if (
+    UPLOAD_FIXED_ASPECT_RATIOS.includes(aspectRatio) ||
+    isStoredAspectRatio(aspectRatio)
+  ) {
+    return null;
+  }
+
+  return "Aspect ratio must be 1:1, 2:3, or a valid width/height ratio.";
 }
