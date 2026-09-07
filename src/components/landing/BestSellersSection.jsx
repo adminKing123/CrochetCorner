@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from "react";
 import LandingSection from "@/components/landing/LandingSection";
-import ProductCard from "@/components/products/ProductCard";
-import ProductCardSkeleton from "@/components/products/ProductCardSkeleton";
+import ProductGrid from "@/components/products/ProductGrid";
 import { ProductQuickViewProvider } from "@/components/products/ProductQuickViewProvider";
 import { BEST_SELLERS_LIMIT } from "@/lib/products/defaults";
 import { fetchBestSellers } from "@/lib/products/client-api";
@@ -39,15 +38,12 @@ export default function BestSellersSection() {
           </p>
         ) : null}
 
-        <div className="grid grid-cols-2 gap-4 sm:gap-5 md:grid-cols-3 lg:grid-cols-4 lg:gap-6">
-          {loading
-            ? Array.from({ length: BEST_SELLERS_LIMIT }, (_, index) => (
-                <ProductCardSkeleton key={`best-seller-skeleton-${index}`} />
-              ))
-            : products.map((product, index) => (
-                <ProductCard key={product.id} product={product} priority={index < 4} />
-              ))}
-        </div>
+        <ProductGrid
+          products={products}
+          loading={loading}
+          skeletonCount={BEST_SELLERS_LIMIT}
+          emptyMessage="No best sellers yet."
+        />
       </LandingSection>
     </ProductQuickViewProvider>
   );

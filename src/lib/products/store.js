@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { PRODUCTS_PAGE_SIZE, defaultProducts } from "@/lib/products/defaults";
+import { parseIdList } from "@/lib/products/filters";
 import { normalizeProduct, sanitizeProducts, validateProduct } from "@/lib/products/validation";
 
 const STORE_PATH = path.join(process.cwd(), "data", "products.json");
@@ -37,14 +38,30 @@ export function getProductsQuery({
   limit = PRODUCTS_PAGE_SIZE,
   search = "",
   bestSeller = "",
+  category = "",
+  keys = "",
 } = {}) {
   let products = readAllProducts();
 
   const query = search.trim().toLowerCase();
+  const categoryIds = parseIdList(category);
+  const keyIds = parseIdList(keys);
 
   if (query) {
     products = products.filter((product) =>
       product.title.toLowerCase().includes(query)
+    );
+  }
+
+  if (categoryIds.length) {
+    products = products.filter((product) =>
+      product.categoryIds?.some((id) => categoryIds.includes(id))
+    );
+  }
+
+  if (keyIds.length) {
+    products = products.filter((product) =>
+      product.keyIds?.some((id) => keyIds.includes(id))
     );
   }
 

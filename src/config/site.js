@@ -14,6 +14,7 @@ export const siteConfig = {
 
 export const authRoutes = {
   home: "/",
+  shop: "/shop",
   login: "/login",
   signup: "/signup",
   verifyEmail: "/verify-email",
@@ -73,7 +74,7 @@ export const taxonomyAdminConfig = {
 };
 
 export const navLinks = [
-  { label: "Shop", href: "#" },
+  { label: "Shop", href: authRoutes.shop },
   { label: "Collections", href: "#" },
   { label: "Custom Orders", href: "#" },
   { label: "Our Story", href: "#" },

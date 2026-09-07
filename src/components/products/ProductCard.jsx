@@ -5,8 +5,16 @@ import ProductImage from "@/components/products/ProductImage";
 import ProductPrice from "@/components/products/ProductPrice";
 import ProductQuickViewButton from "@/components/products/ProductQuickViewButton";
 
-export default function ProductCard({ product, priority = false, showQuickView = true }) {
-  const imageSrc = product.imagePortrait || product.imageSquare;
+export default function ProductCard({
+  product,
+  priority = false,
+  showQuickView = true,
+  imageAspectRatio = "2/3",
+}) {
+  const imageSrc =
+    imageAspectRatio === "1/1"
+      ? product.imageSquare || product.imagePortrait
+      : product.imagePortrait || product.imageSquare;
 
   return (
     <article className="group flex h-full flex-col overflow-hidden rounded-3xl border border-peach/15 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:border-peach/30 hover:shadow-lg">
@@ -14,7 +22,7 @@ export default function ProductCard({ product, priority = false, showQuickView =
         <ProductImage
           src={imageSrc}
           alt={product.title}
-          aspectRatio="2/3"
+          aspectRatio={imageAspectRatio}
           className="rounded-t-3xl"
           imageClassName="transition duration-500 group-hover:scale-105"
           priority={priority}

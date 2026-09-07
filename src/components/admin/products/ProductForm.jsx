@@ -2,7 +2,7 @@
 
 import { useCallback } from "react";
 import { AuthButton, AuthError, AuthInput } from "@/components/auth/ui";
-import SearchableMultiSelect from "@/components/admin/SearchableMultiSelect";
+import SearchableMultiSelect from "@/components/shared/SearchableMultiSelect";
 import ProductImagePreview from "@/components/admin/products/ProductImagePreview";
 import { categoriesApi, keysApi } from "@/lib/taxonomy/client-api";
 
