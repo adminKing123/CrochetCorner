@@ -9,6 +9,7 @@ function parseQueryParams(request) {
     limit: Number(searchParams.get("limit") || 10),
     search: searchParams.get("search") || "",
     trending: searchParams.get("trending") || "",
+    weekly: searchParams.get("weekly") || "",
   };
 }
 

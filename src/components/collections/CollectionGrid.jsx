@@ -6,7 +6,16 @@ import CollectionCardSkeleton from "@/components/collections/CollectionCardSkele
 const gridClassName =
   "grid grid-cols-2 gap-4 sm:gap-5 md:grid-cols-3 lg:grid-cols-4 lg:gap-6";
 
+const landscapeGridClassName = "grid grid-cols-1 gap-4 md:gap-5 lg:grid-cols-2";
+
 const scrollClassName = "collection-scroll-track flex gap-4 md:gap-5";
+
+function resolveTrackClassName(layout, cardVariant, className) {
+  if (className) return className;
+  if (layout === "scroll") return scrollClassName;
+  if (cardVariant === "landscape") return landscapeGridClassName;
+  return gridClassName;
+}
 
 export default function CollectionGrid({
   collections,
@@ -15,9 +24,10 @@ export default function CollectionGrid({
   emptyMessage = "No collections found.",
   layout = "grid",
   cardVariant = "default",
+  showBadges = false,
   className,
 }) {
-  const trackClassName = className || (layout === "scroll" ? scrollClassName : gridClassName);
+  const trackClassName = resolveTrackClassName(layout, cardVariant, className);
   const slideClassName =
     layout === "scroll" ? "collection-scroll-slide shrink-0 snap-start" : undefined;
 
@@ -51,6 +61,7 @@ export default function CollectionGrid({
           collection={collection}
           priority={index < 4}
           variant={cardVariant}
+          showBadges={showBadges}
           className={slideClassName}
         />
       ))}

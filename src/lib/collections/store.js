@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { COLLECTIONS_PAGE_SIZE, defaultCollections } from "@/lib/collections/defaults";
+import { getProductById } from "@/lib/products/store";
 import {
   normalizeCollection,
   sanitizeCollections,
@@ -64,6 +65,7 @@ export function getCollectionsQuery({
   limit = COLLECTIONS_PAGE_SIZE,
   search = "",
   trending = "",
+  weekly = "",
 } = {}) {
   let collections = readAllCollections();
 
@@ -84,6 +86,12 @@ export function getCollectionsQuery({
     collections = collections.filter((collection) => !collection.isTrending);
   }
 
+  if (weekly === "true") {
+    collections = collections.filter((collection) => collection.isWeeklyCollection);
+  } else if (weekly === "false") {
+    collections = collections.filter((collection) => !collection.isWeeklyCollection);
+  }
+
   collections.sort(
     (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
   );
@@ -95,6 +103,45 @@ export function getCollectionsQuery({
 
   return {
     collections: collections.slice(start, start + limit),
+    pagination: {
+      page: safePage,
+      limit,
+      total,
+      totalPages,
+    },
+  };
+}
+
+export function getCollectionProductsQuery(
+  collectionId,
+  { page = 1, limit = 12, search = "" } = {}
+) {
+  const collection = getCollectionById(collectionId);
+
+  if (!collection) {
+    return null;
+  }
+
+  let products = collection.productIds.map((id) => getProductById(id)).filter(Boolean);
+
+  const query = search.trim().toLowerCase();
+
+  if (query) {
+    products = products.filter(
+      (product) =>
+        product.title.toLowerCase().includes(query) ||
+        product.id.toLowerCase().includes(query)
+    );
+  }
+
+  const total = products.length;
+  const totalPages = Math.max(1, Math.ceil(total / limit));
+  const safePage = Math.min(Math.max(page, 1), totalPages);
+  const start = (safePage - 1) * limit;
+
+  return {
+    collection,
+    products: products.slice(start, start + limit),
     pagination: {
       page: safePage,
       limit,

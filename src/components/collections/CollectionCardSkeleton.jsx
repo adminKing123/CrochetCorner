@@ -12,6 +12,26 @@ export default function CollectionCardSkeleton({ variant = "default", className 
     );
   }
 
+  if (variant === "landscape") {
+    return (
+      <div
+        className={`flex h-[220px] overflow-hidden rounded-3xl border border-peach/10 bg-white shadow-sm md:h-[240px] ${className}`}
+      >
+        <div className="h-full w-[220px] shrink-0 animate-pulse bg-peach/10 md:w-[240px]" />
+        <div className="flex min-h-0 flex-1 flex-col p-4 md:p-5">
+          <div className="mb-1.5 h-6 w-24 shrink-0 animate-pulse rounded-full bg-peach/10 md:mb-2" />
+          <div className="h-5 w-4/5 shrink-0 animate-pulse rounded-full bg-peach/10" />
+          <div className="mt-1.5 min-h-0 flex-1 space-y-2 overflow-hidden md:mt-2">
+            <div className="h-4 w-full animate-pulse rounded-full bg-peach/10" />
+            <div className="h-4 w-full animate-pulse rounded-full bg-peach/10" />
+            <div className="h-4 w-2/3 animate-pulse rounded-full bg-peach/10" />
+          </div>
+          <div className="mt-2 h-4 w-1/4 shrink-0 animate-pulse rounded-full bg-peach/10" />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       className={`overflow-hidden rounded-3xl border border-peach/10 bg-white shadow-sm ${className}`}

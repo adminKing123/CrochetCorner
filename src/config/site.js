@@ -85,7 +85,7 @@ export const taxonomyAdminConfig = {
 
 export const navLinks = [
   { label: "Shop", href: authRoutes.shop },
-  { label: "Collections", href: "#" },
+  { label: "Collections", href: authRoutes.collections },
   { label: "Custom Orders", href: "#" },
   { label: "Our Story", href: "#" },
 ];

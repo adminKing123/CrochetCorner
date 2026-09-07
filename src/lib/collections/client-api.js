@@ -46,6 +46,13 @@ export async function fetchCollection(id) {
   return parseResponse(response);
 }
 
+export async function fetchCollectionProducts(id, params = {}) {
+  const response = await fetch(`/api/collections/${id}/products${buildQuery(params)}`, {
+    cache: "no-store",
+  });
+  return parseResponse(response);
+}
+
 export async function fetchCollectionsAdmin(email, params = {}) {
   const response = await fetch(`/api/admin/collections${buildQuery(params)}`, {
     cache: "no-store",
