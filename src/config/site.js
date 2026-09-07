@@ -25,6 +25,7 @@ export const authRoutes = {
   admin: "/admin",
   customOrders: "/custom-orders",
   myCustomOrders: "/custom-orders/requests",
+  about: "/about",
 };
 
 export const adminRoutes = {
@@ -95,11 +96,11 @@ export const navLinks = [
   { label: "Shop", href: authRoutes.shop },
   { label: "Collections", href: authRoutes.collections },
   { label: "Custom Orders", href: authRoutes.customOrders },
-  { label: "Our Story", href: "#" },
+  { label: "Our Story", href: authRoutes.about },
 ];
 
 export const footerLinks = [
-  { label: "About Us", href: "#" },
+  { label: "About Us", href: authRoutes.about },
   { label: "Shop", href: authRoutes.shop },
   { label: "Collections", href: authRoutes.collections },
   { label: "Custom Orders", href: authRoutes.customOrders },
